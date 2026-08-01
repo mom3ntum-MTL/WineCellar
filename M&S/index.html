@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Cellar M&S</title>
+  
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="theme-color" content="#0b0f19">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: { extend: {} }
+    }
+  </script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    .dark ::-webkit-scrollbar-thumb { background: #334155; }
+    body { transition: background-color 0.2s ease, color 0.2s ease; }
+  </style>
+</head>
+<body class="min-h-screen bg-slate-100 text-slate-900 dark:bg-[#0b0f19] dark:text-slate-100 font-sans pb-12 antialiased">
+
+  <header class="sticky top-0 z-30 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-4 py-3 shadow-sm">
+    <div class="max-w-7xl mx-auto flex items-center justify-between gap-3">
+      
+      <div class="flex items-center space-x-3">
+        <div class="p-2 bg-rose-100 dark:bg-rose-950/80 border border-rose-300 dark:border-rose-500/30 rounded-xl text-rose-600 dark:text-rose-500">
+          <i data-lucide="wine" class="w-6 h-6"></i>
+        </div>
+        <div>
+          <h1 class="text-lg font-bold tracking-tight">Cellar M&S</h1>
+          <p class="text-xs text-slate-500 dark:text-slate-400">Total: <span id="bottleCount" class="font-bold text-rose-600 dark:text-rose-400">0</span> Bottles</p>
+        </div>
+      </div>
+
+      <div class="flex items-center space-x-2">
+        <button onclick="toggleTheme()" class="p-2 rounded-xl bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-700 transition" title="Toggle Light/Dark Theme">
+          <i data-lucide="sun-moon" class="w-5 h-5"></i>
+        </button>
+        <button onclick="openScanModal()" class="flex items-center space-x-1.5 px-3 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-medium text-xs sm:text-sm transition shadow-md">
+          <i data-lucide="sparkles" class="w-4 h-4"></i>
+          <span class="hidden sm:inline">Scan Label</span>
+        </button>
+        <button onclick="openAddModal()" class="flex items-center space-x-1.5 px-3 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-medium text-xs sm:text-sm transition shadow-md">
+          <i data-lucide="plus" class="w-4 h-4"></i>
+          <span>Add Bottle</span>
+        </button>
+      </div>
+
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-4 py-6 space-y-4">
+
+    <div class="flex flex-col sm:flex-row gap-3">
+      <div class="relative flex-1">
+        <i data-lucide="search" class="w-4 h-4 absolute left-3.5 top-3 text-slate-400"></i>
+        <input 
+          type="text" 
+          id="searchInput" 
+          oninput="applyFilters()" 
+          placeholder="Search producer, cuvée, region, category, section..." 
+          class="w-full pl-10 pr-4 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-800 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-rose-500 transition shadow-sm"
+        >
+      </div>
+
+      <button onclick="toggleFilterDrawer()" class="flex items-center justify-center space-x-2 px-4 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-800 rounded-xl text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-800 transition shadow-sm">
+        <i data-lucide="sliders-horizontal" class="w-4 h-4"></i>
+        <span>Filters</span>
+      </button>
+    </div>
+
+    <div id="filterDrawer" class="hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 space-y-4 shadow-lg">
+      <div class="flex justify-between items-center border-b border-slate-200 dark:border-slate-800 pb-2">
+        <h3 class="text-xs uppercase font-bold text-slate-500 tracking-wider">Filter Inventory</h3>
+        <button onclick="clearAllFilters()" class="text-xs text-rose-500 hover:underline">Clear All</button>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div>
+          <label class="text-xs text-slate-500 mb-1 block">Category / Style</label>
+          <select id="filterCategory" onchange="applyFilters()" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg p-2 text-xs">
+            <option value="ALL">All Categories</option>
+            <option value="Red Wine">Red Wine</option>
+            <option value="White Wine">White Wine</option>
+            <option value="Sparkling Wine">Sparkling Wine</option>
+            <option value="Rosé Wine">Rosé Wine</option>
+            <option value="Dessert Wine">Dessert Wine</option>
+            <option value="Fortified Wine">Fortified Wine</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="text-xs text-slate-500 mb-1 block">Country</label>
+          <select id="filterCountry" onchange="applyFilters()" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg p-2 text-xs">
+            <option value="ALL">All Countries</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="text-xs text-slate-500 mb-1 block">Cellar Section</label>
+          <select id="filterSection" onchange="applyFilters()" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg p-2 text-xs">
+            <option value="ALL">All Sections</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div id="activeFiltersBar" class="flex flex-wrap gap-2 empty:hidden"></div>
+
+    <div id="loadingSpinner" class="py-12 text-center text-slate-400 space-y-2">
+      <i data-lucide="loader" class="w-8 h-8 animate-spin mx-auto text-rose-500"></i>
+      <p class="text-xs font-mono">Syncing with Google Sheets...</p>
+    </div>
+
+    <div id="tableContainer" class="hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm overflow-x-auto">
+      <table class="w-full text-left text-xs sm:text-sm whitespace-nowrap">
+        <thead class="bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-400 text-[11px] uppercase font-bold border-b border-slate-200 dark:border-slate-700 select-none">
+          <tr>
+            <th onclick="sortTable('producer')" class="px-4 py-3 cursor-pointer hover:text-rose-500 transition">Producer <i data-lucide="arrow-up-down" class="inline w-3 h-3"></i></th>
+            <th onclick="sortTable('cuvee')" class="px-4 py-3 cursor-pointer hover:text-rose-500 transition">Cuvée <i data-lucide="arrow-up-down" class="inline w-3 h-3"></i></th>
+            <th onclick="sortTable('vintage')" class="px-4 py-3 cursor-pointer hover:text-rose-500 transition">Vintage <i data-lucide="arrow-up-down" class="inline w-3 h-3"></i></th>
+            <th onclick="sortTable('category')" class="px-4 py-3 cursor-pointer hover:text-rose-500 transition">Category <i data-lucide="arrow-up-down" class="inline w-3 h-3"></i></th>
+            <th onclick="sortTable('region')" class="px-4 py-3 cursor-pointer hover:text-rose-500 transition">Region <i data-lucide="arrow-up-down" class="inline w-3 h-3"></i></th>
+            <th onclick="sortTable('format')" class="px-4 py-3 cursor-pointer hover:text-rose-500 transition">Format <i data-lucide="arrow-up-down" class="inline w-3 h-3"></i></th>
+            <th onclick="sortTable('maturityStart')" class="px-4 py-3 cursor-pointer hover:text-rose-500 transition">Maturity <i data-lucide="arrow-up-down" class="inline w-3 h-3"></i></th>
+            <th onclick="sortTable('price')" class="px-4 py-3 cursor-pointer hover:text-rose-500 transition">Price / Value <i data-lucide="arrow-up-down" class="inline w-3 h-3"></i></th>
+            <th onclick="sortTable('quantity')" class="px-4 py-3 cursor-pointer hover:text-rose-500 transition">Qty <i data-lucide="arrow-up-down" class="inline w-3 h-3"></i></th>
+            <th onclick="sortTable('section')" class="px-4 py-3 cursor-pointer hover:text-rose-500 transition">Section <i data-lucide="arrow-up-down" class="inline w-3 h-3"></i></th>
+          </tr>
+        </thead>
+        <tbody id="wineTableBody" class="divide-y divide-slate-100 dark:divide-slate-800">
+          </tbody>
+      </table>
+    </div>
+
+  </main>
+
+  <div id="bottleModal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-900 max-w-lg w-full rounded-2xl p-6 space-y-4 border border-slate-200 dark:border-slate-800 shadow-2xl max-h-[90vh] overflow-y-auto">
+      
+      <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
+        <h3 id="modalHeaderTitle" class="font-bold text-base text-slate-900 dark:text-white">Bottle Details</h3>
+        <button onclick="closeModal('bottleModal')" class="text-slate-400 hover:text-slate-600 dark:hover:text-white">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <div id="modalReadView" class="space-y-4">
+        <div id="modalDetailsGrid" class="grid grid-cols-2 gap-3 text-xs"></div>
+
+        <div class="pt-2 flex gap-2">
+          <button onclick="enableEditMode()" class="flex-1 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-medium text-xs transition flex items-center justify-center space-x-1.5">
+            <i data-lucide="edit-3" class="w-4 h-4"></i>
+            <span>Modify Information</span>
+          </button>
+          <button onclick="consumeBottle()" class="flex-1 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl font-medium text-xs transition flex items-center justify-center space-x-1.5">
+            <i data-lucide="wine" class="w-4 h-4"></i>
+            <span>Log 1 Consumed</span>
+          </button>
+        </div>
+      </div>
+
+      <form id="editForm" onsubmit="saveModifiedBottle(event)" class="hidden space-y-3 text-xs">
+        <input type="hidden" id="editId">
+        <div class="grid grid-cols-2 gap-2">
+          <div><label class="text-slate-500">Producer</label><input type="text" id="editProducer" required class="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg"></div>
+          <div><label class="text-slate-500">Cuvée</label><input type="text" id="editCuvee" class="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg"></div>
+          <div><label class="text-slate-500">Vintage</label><input type="number" id="editVintage" class="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg"></div>
+          <div><label class="text-slate-500">Category</label>
+            <select id="editCategory" class="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg">
+              <option value="Red Wine">Red Wine</option>
+              <option value="White Wine">White Wine</option>
+              <option value="Sparkling Wine">Sparkling Wine</option>
+              <option value="Rosé Wine">Rosé Wine</option>
+              <option value="Dessert Wine">Dessert Wine</option>
+              <option value="Fortified Wine">Fortified Wine</option>
+            </select>
+          </div>
+          <div><label class="text-slate-500">Region</label><input type="text" id="editRegion" class="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg"></div>
+          <div><label class="text-slate-500">Country</label><input type="text" id="editCountry" class="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg"></div>
+          <div><label class="text-slate-500">Format</label><input type="text" id="editFormat" class="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg"></div>
+          <div><label class="text-slate-500">Quantity</label><input type="number" id="editQuantity" required class="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg"></div>
+          <div><label class="text-slate-500">Maturity Start</label><input type="number" id="editMaturityStart" class="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg"></div>
+          <div><label class="text-slate-500">Maturity End</label><input type="number" id="editMaturityEnd" class="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg"></div>
+          <div><label class="text-slate-500">Price Paid</label><input type="text" id="editPrice" class="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg"></div>
+          <div><label class="text-slate-500">Market Value</label><input type="text" id="editValue" class="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg"></div>
+          <div class="col-span-2"><label class="text-slate-500">Cellar Section</label><input type="text" id="editSection" class="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg"></div>
+        </div>
+
+        <div class="pt-2 flex gap-2">
+          <button type="button" onclick="disableEditMode()" class="flex-1 py-2 bg-slate-200 dark:bg-slate-800 rounded-lg font-medium">Cancel</button>
+          <button type="submit" class="flex-1 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-medium">Save to Sheet</button>
+        </div>
+      </form>
+
+    </div>
+  </div>
+
+  <div id="addModal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-900 max-w-lg w-full rounded-2xl p-6 space-y-4 border border-slate-200 dark:border-slate-800 shadow-2xl max-h-[90vh] overflow-y-auto">
+      
+      <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
+        <h3 class="font-bold text-base text-slate-900 dark:text-white">Add New Bottle</h3>
+        <button onclick="closeModal('addModal')" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+
+      <form onsubmit="saveNewBottle(event)" class="space-y-3 text-xs">
+        <div class="grid grid-cols-2 gap-2">
+          <div><label class="text-slate-500">Producer *</label><input type="text" id="addProducer" required class="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg"></div>
+          <div><label class="text-slate-500">Cuvée</label><input type="text" id="addCuvee" class="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg"></div>
+          <div><label class="text-slate-500">Vintage</label><input type="number" id="addVintage" placeholder="2018" class="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg"></div>
+          <div><label class="text-slate-500">Category</label>
+            <select id="addCategory" class="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg">
+              <option value="Red Wine">Red Wine</option>
+              <option value="White Wine">White Wine</option>
+              <option value="Sparkling Wine">Sparkling Wine</option>
+              <option value="Rosé Wine">Rosé Wine</option>
+              <option value="Dessert Wine">Dessert Wine</option>
+              <option value="Fortified Wine">Fortified Wine</option>
+            </select>
+          </div>
+          <div><label class="text-slate-500">Region</label><input type="text" id="addRegion" placeholder="Bordeaux" class="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg"></div>
+          <div><label class="text-slate-500">Country</label><input type="text" id="addCountry" placeholder="France" class="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg"></div>
+          <div><label class="text-slate-500">Format</label><input type="text" id="addFormat" value="750 mL" class="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg"></div>
+          <div><label class="text-slate-500">Quantity *</label><input type="number" id="addQuantity" value="1" required class="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg"></div>
+          <div><label class="text-slate-500">Maturity Start</label><input type="number" id="addMaturityStart" placeholder="2024" class="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg"></div>
+          <div><label class="text-slate-500">Maturity End</label><input type="number" id="addMaturityEnd" placeholder="2035" class="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg"></div>
+          <div><label class="text-slate-500">Price Paid</label><input type="text" id="addPrice" placeholder="$45" class="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg"></div>
+          <div><label class="text-slate-500">Market Value</label><input type="text" id="addValue" placeholder="$60" class="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg"></div>
+          <div class="col-span-2"><label class="text-slate-500">Cellar Section</label><input type="text" id="addSection" placeholder="Rack A-01" class="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg"></div>
+        </div>
+
+        <button type="submit" class="w-full py-2.5 bg-rose-600 hover:bg-rose-500 text-white rounded-xl font-medium transition mt-2">Add Bottle to Inventory</button>
+      </form>
+
+    </div>
+  </div>
+
+  <div id="scanModal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-900 max-w-md w-full rounded-2xl p-6 space-y-4 border border-slate-200 dark:border-slate-800 shadow-2xl">
+      <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
+        <div class="flex items-center space-x-2 text-indigo-500">
+          <i data-lucide="sparkles" class="w-5 h-5"></i>
+          <h3 class="font-bold text-slate-900 dark:text-white text-base">Gemini Label Scanner</h3>
+        </div>
+        <button onclick="closeModal('scanModal')" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+
+      <p class="text-xs text-slate-500 leading-relaxed">Select or photograph a wine label. Gemini will parse metadata directly into your inventory form.</p>
+
+      <div onclick="simulateScan()" class="border-2 border-dashed border-indigo-400/40 hover:border-indigo-500 rounded-2xl p-8 text-center cursor-pointer transition bg-indigo-50/50 dark:bg-indigo-950/20 space-y-2">
+        <i data-lucide="camera" class="w-8 h-8 mx-auto text-indigo-500"></i>
+        <div class="text-xs font-bold text-slate-700 dark:text-slate-200">Click to upload photo or test scan</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Live Deployed Web App API URL
+    const API_URL = "https://script.google.com/macros/s/AKfycbyKKdGdomx5xjrFGvceCWH8LwuUjB6NT1-UYHvQVqNrAhr67kgJmBKa50eaz7lK9m1giw/exec";
+
+    let wineInventory = [];
+    let currentSelectedBottle = null;
+    let sortColumn = 'producer';
+    let sortAscending = true;
+
+    document.addEventListener("DOMContentLoaded", () => {
+      lucide.createIcons();
+      fetchInventory();
+    });
+
+    // Theme Switcher
+    function toggleTheme() {
+      document.documentElement.classList.toggle('dark');
+    }
+
+    // Fetch Inventory from Google Sheets
+    async function fetchInventory() {
+      document.getElementById("loadingSpinner").classList.remove("hidden");
+      document.getElementById("tableContainer").classList.add("hidden");
+
+      try {
+        const response = await fetch(API_URL);
+        wineInventory = await response.json();
+        populateFilterDropdowns();
+        applyFilters();
+      } catch (err) {
+        console.error("Failed to load inventory:", err);
+      } finally {
+        document.getElementById("loadingSpinner").classList.add("hidden");
+        document.getElementById("tableContainer").classList.remove("hidden");
+      }
+    }
+
+    // Dynamic Filter Menu logic
+    function toggleFilterDrawer() {
+      document.getElementById("filterDrawer").classList.toggle("hidden");
+    }
+
+    function populateFilterDropdowns() {
+      const countries = [...new Set(wineInventory.map(w => w.country).filter(Boolean))];
+      const sections = [...new Set(wineInventory.map(w => w.section).filter(Boolean))];
+
+      const countrySelect = document.getElementById("filterCountry");
+      countrySelect.innerHTML = `<option value="ALL">All Countries</option>` + countries.map(c => `<option value="${c}">${c}</option>`).join('');
+
+      const sectionSelect = document.getElementById("filterSection");
+      sectionSelect.innerHTML = `<option value="ALL">All Sections</option>` + sections.map(s => `<option value="${s}">${s}</option>`).join('');
+    }
+
+    function clearAllFilters() {
+      document.getElementById("searchInput").value = "";
+      document.getElementById("filterCategory").value = "ALL";
+      document.getElementById("filterCountry").value = "ALL";
+      document.getElementById("filterSection").value = "ALL";
+      applyFilters();
+    }
+
+    function applyFilters() {
+      const search = document.getElementById("searchInput").value.toLowerCase();
+      const catFilter = document.getElementById("filterCategory").value;
+      const countryFilter = document.getElementById("filterCountry").value;
+      const secFilter = document.getElementById("filterSection").value;
+
+      // Active chips bar
+      const chipsBar = document.getElementById("activeFiltersBar");
+      let chipsHtml = "";
+      if (catFilter !== "ALL") chipsHtml += createChip(`Style: ${catFilter}`, () => { document.getElementById("filterCategory").value = "ALL"; applyFilters(); });
+      if (countryFilter !== "ALL") chipsHtml += createChip(`Country: ${countryFilter}`, () => { document.getElementById("filterCountry").value = "ALL"; applyFilters(); });
+      if (secFilter !== "ALL") chipsHtml += createChip(`Section: ${secFilter}`, () => { document.getElementById("filterSection").value = "ALL"; applyFilters(); });
+      chipsBar.innerHTML = chipsHtml;
+      lucide.createIcons();
+
+      const filtered = wineInventory.filter(w => {
+        const matchesSearch = !search || 
+          w.producer.toLowerCase().includes(search) || 
+          w.cuvee.toLowerCase().includes(search) || 
+          w.region.toLowerCase().includes(search) ||
+          w.category.toLowerCase().includes(search) ||
+          w.section.toLowerCase().includes(search);
+
+        const matchesCat = (catFilter === "ALL") || (w.category === catFilter);
+        const matchesCountry = (countryFilter === "ALL") || (w.country === countryFilter);
+        const matchesSec = (secFilter === "ALL") || (w.section === secFilter);
+
+        return matchesSearch && matchesCat && matchesCountry && matchesSec;
+      });
+
+      renderTable(filtered);
+    }
+
+    function createChip(text, onRemove) {
+      return `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium bg-rose-100 dark:bg-rose-950/80 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800">
+        ${text}
+      </span>`;
+    }
+
+    // Sort Table
+    function sortTable(column) {
+      if (sortColumn === column) {
+        sortAscending = !sortAscending;
+      } else {
+        sortColumn = column;
+        sortAscending = true;
+      }
+
+      wineInventory.sort((a, b) => {
+        let valA = a[column] || '';
+        let valB = b[column] || '';
+        if (typeof valA === 'string') valA = valA.toLowerCase();
+        if (typeof valB === 'string') valB = valB.toLowerCase();
+
+        if (valA < valB) return sortAscending ? -1 : 1;
+        if (valA > valB) return sortAscending ? 1 : -1;
+        return 0;
+      });
+
+      applyFilters();
+    }
+
+    // Render Table
+    function renderTable(data) {
+      const tbody = document.getElementById("wineTableBody");
+      document.getElementById("bottleCount").innerText = wineInventory.reduce((sum, w) => sum + (Number(w.quantity) || 0), 0);
+
+      if (data.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="10" class="py-8 text-center text-slate-400">No matching wines found in cellar.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = data.map(wine => `
+        <tr onclick="openBottleDetails('${wine.id}')" class="hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer transition">
+          <td class="px-4 py-3 font-semibold text-slate-900 dark:text-white">${wine.producer}</td>
+          <td class="px-4 py-3 text-slate-500 dark:text-slate-400">${wine.cuvee || '—'}</td>
+          <td class="px-4 py-3 font-mono">${wine.vintage || 'NV'}</td>
+          <td class="px-4 py-3"><span class="px-2 py-0.5 text-[10px] rounded-md font-medium bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300">${wine.category}</span></td>
+          <td class="px-4 py-3">${wine.region ? wine.region + ', ' : ''}${wine.country}</td>
+          <td class="px-4 py-3 text-slate-500">${wine.format}</td>
+          <td class="px-4 py-3 font-mono text-xs">${wine.maturityStart && wine.maturityEnd ? wine.maturityStart + '–' + wine.maturityEnd : '—'}</td>
+          <td class="px-4 py-3">${wine.price || '—'} / ${wine.value || '—'}</td>
+          <td class="px-4 py-3 font-bold ${wine.quantity > 0 ? 'text-rose-600 dark:text-rose-400' : 'text-slate-400'}">${wine.quantity}</td>
+          <td class="px-4 py-3 font-mono text-xs text-slate-500">${wine.section || '—'}</td>
+        </tr>
+      `).join('');
+    }
+
+    // Read Details Modal
+    function openBottleDetails(id) {
+      currentSelectedBottle = wineInventory.find(w => w.id === id);
+      if (!currentSelectedBottle) return;
+
+      document.getElementById("modalHeaderTitle").innerText = `${currentSelectedBottle.producer} (${currentSelectedBottle.vintage || 'NV'})`;
+      
+      const grid = document.getElementById("modalDetailsGrid");
+      grid.innerHTML = `
+        <div class="bg-slate-50 dark:bg-slate-800 p-2.5 rounded-xl"><span class="text-slate-400 block text-[10px]">Cuvée</span><span class="font-semibold">${currentSelectedBottle.cuvee || '—'}</span></div>
+        <div class="bg-slate-50 dark:bg-slate-800 p-2.5 rounded-xl"><span class="text-slate-400 block text-[10px]">Category & Format</span><span class="font-semibold">${currentSelectedBottle.category} (${currentSelectedBottle.format})</span></div>
+        <div class="bg-slate-50 dark:bg-slate-800 p-2.5 rounded-xl"><span class="text-slate-400 block text-[10px]">Region</span><span class="font-semibold">${currentSelectedBottle.region}, ${currentSelectedBottle.country}</span></div>
+        <div class="bg-slate-50 dark:bg-slate-800 p-2.5 rounded-xl"><span class="text-slate-400 block text-[10px]">Location / Section</span><span class="font-semibold font-mono">${currentSelectedBottle.section || '—'}</span></div>
+        <div class="bg-slate-50 dark:bg-slate-800 p-2.5 rounded-xl"><span class="text-slate-400 block text-[10px]">Maturity Window</span><span class="font-semibold">${currentSelectedBottle.maturityStart} – ${currentSelectedBottle.maturityEnd}</span></div>
+        <div class="bg-slate-50 dark:bg-slate-800 p-2.5 rounded-xl"><span class="text-slate-400 block text-[10px]">Price / Value</span><span class="font-semibold">${currentSelectedBottle.price} / ${currentSelectedBottle.value}</span></div>
+        <div class="col-span-2 bg-slate-50 dark:bg-slate-800 p-2.5 rounded-xl flex justify-between items-center"><span class="text-slate-400 text-[10px]">Current Stock</span><span class="text-base font-extrabold text-rose-500">${currentSelectedBottle.quantity} Bottles</span></div>
+      `;
+
+      disableEditMode();
+      document.getElementById("bottleModal").classList.remove("hidden");
+    }
+
+    // Toggle Edit Mode
+    function enableEditMode() {
+      const w = currentSelectedBottle;
+      document.getElementById("editId").value = w.id;
+      document.getElementById("editProducer").value = w.producer;
+      document.getElementById("editCuvee").value = w.cuvee;
+      document.getElementById("editVintage").value = w.vintage;
+      document.getElementById("editCategory").value = w.category;
+      document.getElementById("editRegion").value = w.region;
+      document.getElementById("editCountry").value = w.country;
+      document.getElementById("editFormat").value = w.format;
+      document.getElementById("editQuantity").value = w.quantity;
+      document.getElementById("editMaturityStart").value = w.maturityStart;
+      document.getElementById("editMaturityEnd").value = w.maturityEnd;
+      document.getElementById("editPrice").value = w.price;
+      document.getElementById("editValue").value = w.value;
+      document.getElementById("editSection").value = w.section;
+
+      document.getElementById("modalReadView").classList.add("hidden");
+      document.getElementById("editForm").classList.remove("hidden");
+    }
+
+    function disableEditMode() {
+      document.getElementById("modalReadView").classList.remove("hidden");
+      document.getElementById("editForm").classList.add("hidden");
+    }
+
+    // Save Modified Bottle
+    async function saveModifiedBottle(e) {
+      e.preventDefault();
+      const updatedBottle = {
+        id: document.getElementById("editId").value,
+        producer: document.getElementById("editProducer").value,
+        cuvee: document.getElementById("editCuvee").value,
+        vintage: document.getElementById("editVintage").value,
+        category: document.getElementById("editCategory").value,
+        region: document.getElementById("editRegion").value,
+        country: document.getElementById("editCountry").value,
+        format: document.getElementById("editFormat").value,
+        quantity: Number(document.getElementById("editQuantity").value),
+        maturityStart: document.getElementById("editMaturityStart").value,
+        maturityEnd: document.getElementById("editMaturityEnd").value,
+        price: document.getElementById("editPrice").value,
+        value: document.getElementById("editValue").value,
+        section: document.getElementById("editSection").value
+      };
+
+      closeModal("bottleModal");
+      await sendPostRequest("MODIFY", updatedBottle);
+    }
+
+    // Log 1 Consumed
+    async function consumeBottle() {
+      if (currentSelectedBottle && currentSelectedBottle.quantity > 0) {
+        currentSelectedBottle.quantity -= 1;
+        closeModal("bottleModal");
+        await sendPostRequest("MODIFY", currentSelectedBottle);
+      }
+    }
+
+    // Add New Bottle
+    function openAddModal() {
+      document.getElementById("addModal").classList.remove("hidden");
+    }
+
+    async function saveNewBottle(e) {
+      e.preventDefault();
+      const newWine = {
+        producer: document.getElementById("addProducer").value,
+        cuvee: document.getElementById("addCuvee").value,
+        vintage: document.getElementById("addVintage").value,
+        category: document.getElementById("addCategory").value,
+        region: document.getElementById("addRegion").value,
+        country: document.getElementById("addCountry").value,
+        format: document.getElementById("addFormat").value,
+        quantity: Number(document.getElementById("addQuantity").value),
+        maturityStart: document.getElementById("addMaturityStart").value,
+        maturityEnd: document.getElementById("addMaturityEnd").value,
+        price: document.getElementById("addPrice").value,
+        value: document.getElementById("addValue").value,
+        section: document.getElementById("addSection").value
+      };
+
+      closeModal("addModal");
+      await sendPostRequest("ADD", newWine);
+    }
+
+    // Send POST payload to Apps Script API
+    async function sendPostRequest(actionType, dataPayload) {
+      document.getElementById("loadingSpinner").classList.remove("hidden");
+      try {
+        await fetch(API_URL, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain" },
+          body: JSON.stringify({ action: actionType, data: dataPayload })
+        });
+        await fetchInventory(); // Refresh view
+      } catch (err) {
+        console.error("Save error:", err);
+      }
+    }
+
+    function openScanModal() { document.getElementById("scanModal").classList.remove("hidden"); }
+    function closeModal(id) { document.getElementById(id).classList.add("hidden"); }
+    
+    function simulateScan() {
+      document.getElementById("addProducer").value = "Château Margaux";
+      document.getElementById("addCuvee").value = "1er Grand Cru Classé";
+      document.getElementById("addVintage").value = 2015;
+      document.getElementById("addCategory").value = "Red Wine";
+      document.getElementById("addRegion").value = "Margaux, Bordeaux";
+      document.getElementById("addCountry").value = "France";
+      document.getElementById("addMaturityStart").value = 2025;
+      document.getElementById("addMaturityEnd").value = 2050;
+      closeModal("scanModal");
+      openAddModal();
+    }
+  </script>
+</body>
+</html>
