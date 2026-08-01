@@ -20,29 +20,29 @@
   <script src="https://unpkg.com/lucide@latest"></script>
 
   <style>
-    ::-webkit-scrollbar { width: 6px; height: 6px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-    .dark ::-webkit-scrollbar-thumb { background: #334155; }
+    /* Thicker, desktop-friendly scrollbars */
+    ::-webkit-scrollbar { width: 12px; height: 12px; }
+    ::-webkit-scrollbar-track { background: #e2e8f0; border-radius: 6px; }
+    .dark ::-webkit-scrollbar-track { background: #1e293b; }
+    ::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 6px; border: 2px solid transparent; background-clip: content-box; }
+    ::-webkit-scrollbar-thumb:hover { background: #64748b; }
+    .dark ::-webkit-scrollbar-thumb { background: #475569; border: 2px solid transparent; background-clip: content-box; }
+    .dark ::-webkit-scrollbar-thumb:hover { background: #64748b; }
     body { transition: background-color 0.2s ease, color 0.2s ease; }
   </style>
 </head>
 <body class="min-h-screen bg-slate-100 text-slate-900 dark:bg-[#0b0f19] dark:text-slate-100 font-sans pb-12 antialiased">
 
   <header class="sticky top-0 z-30 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-4 py-3 shadow-sm">
-    <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
+    <div class="max-w-[98%] w-full mx-auto flex flex-wrap items-center justify-between gap-3">
       
+      <!-- Left: Logo & Cellar Stats -->
       <div class="flex items-center space-x-3">
         <div class="p-2 bg-rose-100 dark:bg-rose-950/80 border border-rose-300 dark:border-rose-500/30 rounded-xl text-rose-600 dark:text-rose-500">
           <i data-lucide="wine" class="w-6 h-6"></i>
         </div>
         <div>
-          <div class="flex items-center space-x-2">
-            <h1 class="text-lg font-bold tracking-tight">The Guncles' Cellar</h1>
-            <button onclick="openStatsModal()" class="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-rose-600 transition" title="View Cellar Statistics">
-              <i data-lucide="pie-chart" class="w-4 h-4"></i>
-            </button>
-          </div>
+          <h1 class="text-lg font-bold tracking-tight">The Guncles' Cellar</h1>
           <p class="text-xs text-slate-500 dark:text-slate-400">
             Total: <span id="bottleCount" class="font-bold text-rose-600 dark:text-rose-400">0</span> Bottles 
             • Investment: <span id="totalPaidValue" class="font-bold text-emerald-600 dark:text-emerald-400">$0</span>
@@ -50,10 +50,20 @@
         </div>
       </div>
 
+      <!-- Center: Theme & Analytics Buttons -->
       <div class="flex items-center space-x-2">
-        <button onclick="toggleTheme()" class="p-2 rounded-xl bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-700 transition" title="Toggle Light/Dark Theme">
+        <button onclick="toggleTheme()" class="flex items-center px-3 py-2 rounded-xl bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-700 transition" title="Toggle Light/Dark Theme">
+          <span class="text-xs font-medium mr-1.5 hidden sm:inline">App Theme</span>
           <i data-lucide="sun-moon" class="w-5 h-5"></i>
         </button>
+        <button onclick="openStatsModal()" class="flex items-center px-3 py-2 rounded-xl bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-700 transition" title="View Cellar Statistics">
+          <i data-lucide="pie-chart" class="w-5 h-5"></i>
+          <span class="text-xs font-medium ml-1.5 hidden sm:inline">Statistics</span>
+        </button>
+      </div>
+
+      <!-- Right: Actions -->
+      <div class="flex items-center space-x-2">
         <button onclick="openScanModal()" class="flex items-center space-x-1.5 px-3 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-medium text-xs sm:text-sm transition shadow-md">
           <i data-lucide="camera" class="w-4 h-4"></i>
           <span class="hidden sm:inline">Scan Label</span>
@@ -67,7 +77,7 @@
     </div>
   </header>
 
-  <main class="max-w-7xl mx-auto px-4 py-6 space-y-4">
+  <main class="max-w-[98%] w-full mx-auto px-2 sm:px-4 py-6 space-y-4">
 
     <div class="flex flex-col sm:flex-row gap-3">
       <div class="relative flex-1">
@@ -87,30 +97,32 @@
       </button>
     </div>
 
+    <!-- Filter Drawer -->
     <div id="filterDrawer" class="hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 space-y-4 shadow-lg">
       <div class="flex justify-between items-center border-b border-slate-200 dark:border-slate-800 pb-2">
-        <h3 class="text-xs uppercase font-bold text-slate-500 tracking-wider">Filter Inventory</h3>
+        <h3 class="text-xs uppercase font-bold text-slate-500 tracking-wider">Filter Inventory (Hold Ctrl/Cmd or Tap to Select Multiple)</h3>
         <button onclick="clearAllFilters()" class="text-xs text-rose-500 hover:underline">Clear All Filters</button>
       </div>
 
-      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3">
         <div>
-          <label class="text-xs text-slate-500 mb-1 block">Category / Style</label>
-          <select id="filterCategory" onchange="applyFilters()" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg p-2 text-xs">
-            <option value="ALL">All Categories</option>
+          <label class="text-xs text-slate-500 mb-1 block font-semibold">Category / Style</label>
+          <select id="filterCategory" multiple onchange="applyFilters()" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg p-1.5 text-xs h-28">
+            <option value="ALL" selected>All Categories</option>
             <option value="Red Wine">Red Wine</option>
             <option value="White Wine">White Wine</option>
             <option value="Sparkling Wine">Sparkling Wine</option>
             <option value="Rosé Wine">Rosé Wine</option>
+            <option value="Orange Wine">Orange Wine</option>
             <option value="Dessert Wine">Dessert Wine</option>
             <option value="Fortified Wine">Fortified Wine</option>
           </select>
         </div>
 
         <div>
-          <label class="text-xs text-slate-500 mb-1 block">Readiness</label>
-          <select id="filterReadiness" onchange="applyFilters()" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg p-2 text-xs">
-            <option value="ALL">All Statuses</option>
+          <label class="text-xs text-slate-500 mb-1 block font-semibold">Readiness</label>
+          <select id="filterReadiness" multiple onchange="applyFilters()" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg p-1.5 text-xs h-28">
+            <option value="ALL" selected>All Statuses</option>
             <option value="Can Drink Now">Can Drink Now</option>
             <option value="Hold">Hold</option>
             <option value="Past Peak / Matured">Past Peak / Matured</option>
@@ -118,38 +130,46 @@
         </div>
 
         <div>
-          <label class="text-xs text-slate-500 mb-1 block">Country</label>
-          <select id="filterCountry" onchange="applyFilters()" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg p-2 text-xs">
-            <option value="ALL">All Countries</option>
+          <label class="text-xs text-slate-500 mb-1 block font-semibold">Country</label>
+          <select id="filterCountry" multiple onchange="applyFilters()" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg p-1.5 text-xs h-28">
+            <option value="ALL" selected>All Countries</option>
           </select>
         </div>
 
         <div>
-          <label class="text-xs text-slate-500 mb-1 block">Region</label>
-          <select id="filterRegion" onchange="applyFilters()" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg p-2 text-xs">
-            <option value="ALL">All Regions</option>
+          <label class="text-xs text-slate-500 mb-1 block font-semibold">Region</label>
+          <select id="filterRegion" multiple onchange="applyFilters()" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg p-1.5 text-xs h-28">
+            <option value="ALL" selected>All Regions</option>
           </select>
         </div>
 
         <div>
-          <label class="text-xs text-slate-500 mb-1 block">Producer</label>
-          <select id="filterProducer" onchange="applyFilters()" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg p-2 text-xs">
-            <option value="ALL">All Producers</option>
+          <label class="text-xs text-slate-500 mb-1 block font-semibold">Producer</label>
+          <select id="filterProducer" multiple onchange="applyFilters()" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg p-1.5 text-xs h-28">
+            <option value="ALL" selected>All Producers</option>
           </select>
         </div>
 
         <div>
-          <label class="text-xs text-slate-500 mb-1 block">Vintage</label>
-          <select id="filterVintage" onchange="applyFilters()" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg p-2 text-xs">
-            <option value="ALL">All Vintages</option>
+          <label class="text-xs text-slate-500 mb-1 block font-semibold">Vintage</label>
+          <select id="filterVintage" multiple onchange="applyFilters()" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg p-1.5 text-xs h-28">
+            <option value="ALL" selected>All Vintages</option>
           </select>
         </div>
 
         <div>
-          <label class="text-xs text-slate-500 mb-1 block">Cellar Section</label>
-          <select id="filterSection" onchange="applyFilters()" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg p-2 text-xs">
-            <option value="ALL">All Sections</option>
+          <label class="text-xs text-slate-500 mb-1 block font-semibold">Cellar Section</label>
+          <select id="filterSection" multiple onchange="applyFilters()" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg p-1.5 text-xs h-28">
+            <option value="ALL" selected>All Sections</option>
           </select>
+        </div>
+
+        <div>
+          <label class="text-xs text-slate-500 mb-1 block font-semibold">Price Range ($)</label>
+          <div class="space-y-2">
+            <input type="number" id="filterPriceMin" oninput="applyFilters()" placeholder="Min $" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg p-1.5 text-xs">
+            <input type="number" id="filterPriceMax" oninput="applyFilters()" placeholder="Max $" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg p-1.5 text-xs">
+          </div>
         </div>
       </div>
     </div>
@@ -178,7 +198,7 @@
             <th onclick="sortTable('section')" class="px-4 py-3 cursor-pointer hover:text-rose-500 transition">Section <i data-lucide="arrow-up-down" class="inline w-3 h-3"></i></th>
           </tr>
         </thead>
-        <tbody id="wineTableBody" class="divide-y divide-slate-100 dark:divide-slate-800">
+        <tbody id="wineTableBody" class="divide-y divide-slate-100 dark:divide-slate-800 text-xs sm:text-sm">
         </tbody>
       </table>
     </div>
@@ -237,12 +257,13 @@
               <option value="White Wine">White Wine</option>
               <option value="Sparkling Wine">Sparkling Wine</option>
               <option value="Rosé Wine">Rosé Wine</option>
+              <option value="Orange Wine">Orange Wine</option>
               <option value="Dessert Wine">Dessert Wine</option>
               <option value="Fortified Wine">Fortified Wine</option>
             </select>
           </div>
           <div><label class="text-slate-500">Country</label><input type="text" id="editCountry" class="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg"></div>
-          <div><label class="text-slate-500">Format (ML)</label><input type="number" id="editFormat" placeholder="750" class="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg"></div>
+          <div><label class="text-slate-500">Format (mL)</label><input type="number" id="editFormat" placeholder="750" class="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg"></div>
           <div><label class="text-slate-500">Quantity</label><input type="number" id="editQuantity" required class="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg"></div>
           <div><label class="text-slate-500">Maturity Start</label><input type="number" id="editMaturityStart" class="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg"></div>
           <div><label class="text-slate-500">Maturity End</label><input type="number" id="editMaturityEnd" class="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg"></div>
@@ -280,15 +301,16 @@
               <option value="White Wine">White Wine</option>
               <option value="Sparkling Wine">Sparkling Wine</option>
               <option value="Rosé Wine">Rosé Wine</option>
+              <option value="Orange Wine">Orange Wine</option>
               <option value="Dessert Wine">Dessert Wine</option>
               <option value="Fortified Wine">Fortified Wine</option>
             </select>
           </div>
           <div><label class="text-slate-500">Country</label><input type="text" id="addCountry" placeholder="France" class="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg"></div>
-          <div><label class="text-slate-500">Format (ML)</label><input type="number" id="addFormat" placeholder="750" class="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg"></div>
+          <div><label class="text-slate-500">Format (mL)</label><input type="number" id="addFormat" placeholder="750" class="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg"></div>
           <div><label class="text-slate-500">Quantity *</label><input type="number" id="addQuantity" placeholder="1" required class="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg"></div>
           <div><label class="text-slate-500">Maturity Start</label><input type="number" id="addMaturityStart" placeholder="2024" class="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg"></div>
-          <div><label class="text-slate-500">Maturity End</label><input type="number" id="addMaturityEnd" placeholder="2035" class="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg"></div>
+          <div><label class="text-slate-500">Maturity End</label><input type="number" id="addMaturityEnd" placeholder="2035" class="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg font-sans"></div>
           <div><label class="text-slate-500">Price Paid ($)</label><input type="text" id="addPrice" placeholder="45" class="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg"></div>
           <div><label class="text-slate-500">Market Value ($)</label><input type="text" id="addValue" placeholder="60" class="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg"></div>
           <div class="col-span-2"><label class="text-slate-500">Cellar Section</label><input type="text" id="addSection" placeholder="Rack A-01" class="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg"></div>
@@ -387,6 +409,11 @@
           <h4 class="font-bold text-slate-700 dark:text-slate-300">Maturity Status</h4>
           <div id="statReadinessBars" class="space-y-1.5"></div>
         </div>
+
+        <div class="bg-slate-50 dark:bg-slate-800/60 p-4 rounded-xl border border-slate-200 dark:border-slate-700 space-y-2 col-span-1 sm:col-span-2">
+          <h4 class="font-bold text-slate-700 dark:text-slate-300">Format Distribution</h4>
+          <div id="statFormatBars" class="grid grid-cols-1 sm:grid-cols-2 gap-2"></div>
+        </div>
       </div>
 
     </div>
@@ -446,10 +473,12 @@
           return `<span class="px-2 py-0.5 text-[10px] rounded-md font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-950/80 dark:text-yellow-300 border border-yellow-200 dark:border-yellow-900">Sparkling Wine</span>`;
         case 'Rosé Wine':
           return `<span class="px-2 py-0.5 text-[10px] rounded-md font-medium bg-pink-100 text-pink-800 dark:bg-pink-950/80 dark:text-pink-300 border border-pink-200 dark:border-pink-900">Rosé Wine</span>`;
+        case 'Orange Wine':
+          return `<span class="px-2 py-0.5 text-[10px] rounded-md font-medium bg-orange-100 text-orange-800 dark:bg-orange-950/80 dark:text-orange-300 border border-orange-200 dark:border-orange-900">Orange Wine</span>`;
         case 'Dessert Wine':
-          return `<span class="px-2 py-0.5 text-[10px] rounded-md font-medium bg-orange-100 text-orange-800 dark:bg-orange-950/80 dark:text-orange-300 border border-orange-200 dark:border-orange-900">Dessert Wine</span>`;
+          return `<span class="px-2 py-0.5 text-[10px] rounded-md font-medium bg-sky-100 text-sky-800 dark:bg-sky-950/80 dark:text-sky-300 border border-sky-200 dark:border-sky-900">Dessert Wine</span>`;
         case 'Fortified Wine':
-          return `<span class="px-2 py-0.5 text-[10px] rounded-md font-medium bg-purple-100 text-purple-800 dark:bg-purple-950/80 dark:text-purple-300 border border-purple-200 dark:border-purple-900">Fortified Wine</span>`;
+          return `<span class="px-2 py-0.5 text-[10px] rounded-md font-medium bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-900">Fortified Wine</span>`;
         default:
           return `<span class="px-2 py-0.5 text-[10px] rounded-md font-medium bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300">${category || 'Wine'}</span>`;
       }
@@ -510,44 +539,89 @@
 
     function populateOptions(elemId, items, defaultLabel) {
       const select = document.getElementById(elemId);
-      select.innerHTML = `<option value="ALL">${defaultLabel}</option>` + items.map(item => `<option value="${item}">${item}</option>`).join('');
+      select.innerHTML = `<option value="ALL" selected>${defaultLabel}</option>` + items.map(item => `<option value="${item}">${item}</option>`).join('');
+    }
+
+    function getSelectedValues(selectId) {
+      const select = document.getElementById(selectId);
+      if (!select) return [];
+      const selected = Array.from(select.selectedOptions).map(opt => opt.value);
+      return selected;
+    }
+
+    function clearSingleFilter(selectId, valueToRemove) {
+      const select = document.getElementById(selectId);
+      if (!select) return;
+
+      Array.from(select.options).forEach(opt => {
+        if (opt.value === valueToRemove) opt.selected = false;
+      });
+
+      if (select.selectedOptions.length === 0) {
+        const allOpt = Array.from(select.options).find(o => o.value === "ALL");
+        if (allOpt) allOpt.selected = true;
+      }
+      applyFilters();
     }
 
     function clearAllFilters() {
       document.getElementById("searchInput").value = "";
-      document.getElementById("filterCategory").value = "ALL";
-      document.getElementById("filterReadiness").value = "ALL";
-      document.getElementById("filterCountry").value = "ALL";
-      document.getElementById("filterRegion").value = "ALL";
-      document.getElementById("filterProducer").value = "ALL";
-      document.getElementById("filterVintage").value = "ALL";
-      document.getElementById("filterSection").value = "ALL";
+      document.getElementById("filterPriceMin").value = "";
+      document.getElementById("filterPriceMax").value = "";
+
+      ["filterCategory", "filterReadiness", "filterCountry", "filterRegion", "filterProducer", "filterVintage", "filterSection"].forEach(id => {
+        const select = document.getElementById(id);
+        if (select) {
+          Array.from(select.options).forEach(opt => opt.selected = (opt.value === "ALL"));
+        }
+      });
       applyFilters();
     }
 
     function applyFilters() {
       const search = document.getElementById("searchInput").value.toLowerCase();
-      const catFilter = document.getElementById("filterCategory").value;
-      const readFilter = document.getElementById("filterReadiness").value;
-      const countryFilter = document.getElementById("filterCountry").value;
-      const regionFilter = document.getElementById("filterRegion").value;
-      const producerFilter = document.getElementById("filterProducer").value;
-      const vintageFilter = document.getElementById("filterVintage").value;
-      const secFilter = document.getElementById("filterSection").value;
+      const minPrice = parseFloat(document.getElementById("filterPriceMin").value);
+      const maxPrice = parseFloat(document.getElementById("filterPriceMax").value);
+
+      const catFilter = getSelectedValues("filterCategory");
+      const readFilter = getSelectedValues("filterReadiness");
+      const countryFilter = getSelectedValues("filterCountry");
+      const regionFilter = getSelectedValues("filterRegion");
+      const producerFilter = getSelectedValues("filterProducer");
+      const vintageFilter = getSelectedValues("filterVintage");
+      const secFilter = getSelectedValues("filterSection");
 
       const chipsBar = document.getElementById("activeFiltersBar");
       let chipsHtml = "";
-      if (catFilter !== "ALL") chipsHtml += createChip(`Style: ${catFilter}`);
-      if (readFilter !== "ALL") chipsHtml += createChip(`Status: ${readFilter}`);
-      if (countryFilter !== "ALL") chipsHtml += createChip(`Country: ${countryFilter}`);
-      if (regionFilter !== "ALL") chipsHtml += createChip(`Region: ${regionFilter}`);
-      if (producerFilter !== "ALL") chipsHtml += createChip(`Producer: ${producerFilter}`);
-      if (vintageFilter !== "ALL") chipsHtml += createChip(`Vintage: ${vintageFilter}`);
-      if (secFilter !== "ALL") chipsHtml += createChip(`Section: ${secFilter}`);
+
+      const addChips = (selectId, values) => {
+        values.forEach(v => {
+          if (v !== "ALL") chipsHtml += createChip(selectId, v);
+        });
+      };
+
+      addChips("filterCategory", catFilter);
+      addChips("filterReadiness", readFilter);
+      addChips("filterCountry", countryFilter);
+      addChips("filterRegion", regionFilter);
+      addChips("filterProducer", producerFilter);
+      addChips("filterVintage", vintageFilter);
+      addChips("filterSection", secFilter);
+
+      if (!isNaN(minPrice)) chipsHtml += createChipCustom(`Min Price: $${minPrice}`, () => { document.getElementById("filterPriceMin").value = ""; applyFilters(); });
+      if (!isNaN(maxPrice)) chipsHtml += createChipCustom(`Max Price: $${maxPrice}`, () => { document.getElementById("filterPriceMax").value = ""; applyFilters(); });
+
       chipsBar.innerHTML = chipsHtml;
       lucide.createIcons();
 
+      const isMatchMulti = (filterArray, wineValue) => {
+        if (filterArray.length === 0 || filterArray.includes("ALL")) return true;
+        return filterArray.includes(String(wineValue));
+      };
+
       const filtered = wineInventory.filter(w => {
+        const winePrice = parseNumericPrice(w.price);
+
         const matchesSearch = !search || 
           w.producer.toLowerCase().includes(search) || 
           w.appellation.toLowerCase().includes(search) || 
@@ -555,27 +629,50 @@
           w.category.toLowerCase().includes(search) ||
           w.section.toLowerCase().includes(search);
 
-        const matchesCat = (catFilter === "ALL") || (w.category === catFilter);
-        const matchesRead = (readFilter === "ALL") || (w.readiness === readFilter);
-        const matchesCountry = (countryFilter === "ALL") || (w.country === countryFilter);
-        const matchesRegion = (regionFilter === "ALL") || (w.region === regionFilter);
-        const matchesProducer = (producerFilter === "ALL") || (w.producer === producerFilter);
-        const matchesVintage = (vintageFilter === "ALL") || (String(w.vintage) === String(vintageFilter));
-        const matchesSec = (secFilter === "ALL") || (w.section === secFilter);
+        const matchesCat = isMatchMulti(catFilter, w.category);
+        const matchesRead = isMatchMulti(readFilter, w.readiness);
+        const matchesCountry = isMatchMulti(countryFilter, w.country);
+        const matchesRegion = isMatchMulti(regionFilter, w.region);
+        const matchesProducer = isMatchMulti(producerFilter, w.producer);
+        const matchesVintage = isMatchMulti(vintageFilter, w.vintage);
+        const matchesSec = isMatchMulti(secFilter, w.section);
 
-        return matchesSearch && matchesCat && matchesRead && matchesCountry && matchesRegion && matchesProducer && matchesVintage && matchesSec;
+        const matchesMinPrice = isNaN(minPrice) || winePrice >= minPrice;
+        const matchesMaxPrice = isNaN(maxPrice) || winePrice <= maxPrice;
+
+        return matchesSearch && matchesCat && matchesRead && matchesCountry && matchesRegion && matchesProducer && matchesVintage && matchesSec && matchesMinPrice && matchesMaxPrice;
       });
 
       renderTable(filtered);
     }
 
-    function createChip(text) {
-      return `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium bg-rose-100 dark:bg-rose-950/80 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800">
-        ${text}
+    function createChip(selectId, filterValue) {
+      return `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-rose-100 dark:bg-rose-950/80 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800">
+        <span>${filterValue}</span>
+        <button onclick="clearSingleFilter('${selectId}', '${filterValue.replace(/'/g, "\\'")}')" class="hover:text-rose-900 dark:hover:text-rose-100 transition focus:outline-none">
+          <i data-lucide="x" class="w-3.5 h-3.5"></i>
+        </button>
       </span>`;
     }
 
-    // Sort Table
+    function createChipCustom(text, removeFn) {
+      return `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+        <span>${text}</span>
+        <button onclick="(${removeFn})()" class="hover:text-emerald-900 dark:hover:text-emerald-100 transition focus:outline-none">
+          <i data-lucide="x" class="w-3.5 h-3.5"></i>
+        </button>
+      </span>`;
+    }
+
+    // Helper to strip accents for clean alphabetical sorting
+    function normalizeStr(str) {
+      return String(str || '')
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase();
+    }
+
+    // Sort Table Accent-Insensitive
     function sortTable(column) {
       if (sortColumn === column) {
         sortAscending = !sortAscending;
@@ -585,10 +682,15 @@
       }
 
       wineInventory.sort((a, b) => {
-        let valA = a[column] || '';
-        let valB = b[column] || '';
-        if (typeof valA === 'string') valA = valA.toLowerCase();
-        if (typeof valB === 'string') valB = valB.toLowerCase();
+        let valA = normalizeStr(a[column]);
+        let valB = normalizeStr(b[column]);
+
+        // Numeric comparison for numeric fields
+        if (column === 'vintage' || column === 'quantity' || column === 'price' || column === 'value' || column === 'format') {
+          let numA = parseNumericPrice(a[column]);
+          let numB = parseNumericPrice(b[column]);
+          return sortAscending ? numA - numB : numB - numA;
+        }
 
         if (valA < valB) return sortAscending ? -1 : 1;
         if (valA > valB) return sortAscending ? 1 : -1;
@@ -615,22 +717,22 @@
 
       tbody.innerHTML = data.map(wine => `
         <tr onclick="openBottleDetails('${wine.id}')" class="hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer transition">
-          <td class="px-4 py-3 font-semibold text-slate-900 dark:text-white">${wine.producer}</td>
-          <td class="px-4 py-3 text-slate-500 dark:text-slate-400">${wine.appellation || '—'}</td>
-          <td class="px-4 py-3 font-mono">${wine.vintage || 'NV'}</td>
-          <td class="px-4 py-3 font-medium">${wine.region ? wine.region + ', ' : ''}${wine.country}</td>
+          <td class="px-4 py-3 font-bold text-slate-900 dark:text-white">${wine.producer}</td>
+          <td class="px-4 py-3 font-bold text-slate-900 dark:text-white">${wine.appellation || '—'}</td>
+          <td class="px-4 py-3 font-bold text-slate-900 dark:text-white">${wine.vintage || 'NV'}</td>
+          <td class="px-4 py-3">${wine.region ? wine.region + ', ' : ''}${wine.country}</td>
           <td class="px-4 py-3">${getCategoryBadge(wine.category)}</td>
-          <td class="px-4 py-3 text-slate-500">${wine.format ? wine.format + ' ML' : '—'}</td>
-          <td class="px-4 py-3 font-mono text-xs">${wine.maturityStart && wine.maturityEnd ? wine.maturityStart + '–' + wine.maturityEnd : '—'}</td>
+          <td class="px-4 py-3 text-slate-500">${wine.format ? wine.format + ' mL' : '—'}</td>
+          <td class="px-4 py-3 text-xs">${wine.maturityStart && wine.maturityEnd ? wine.maturityStart + '–' + wine.maturityEnd : '—'}</td>
           <td class="px-4 py-3">${getReadinessBadge(wine.readiness)}</td>
-          <td class="px-4 py-3 font-mono">${formatCurrency(wine.price)} / ${formatCurrency(wine.value)}</td>
+          <td class="px-4 py-3">${formatCurrency(wine.price)} / ${formatCurrency(wine.value)}</td>
           <td class="px-4 py-3 font-bold ${wine.quantity > 0 ? 'text-rose-600 dark:text-rose-400' : 'text-slate-400'}">${wine.quantity}</td>
-          <td class="px-4 py-3 font-mono text-xs text-slate-500">${wine.section || '—'}</td>
+          <td class="px-4 py-3 text-xs text-slate-500">${wine.section || '—'}</td>
         </tr>
       `).join('');
     }
 
-    // Open Read Details Modal
+    // Open Read Details Modal (Location and Stock Swapped)
     function openBottleDetails(id) {
       currentSelectedBottle = wineInventory.find(w => w.id === id);
       if (!currentSelectedBottle) return;
@@ -641,8 +743,8 @@
       grid.innerHTML = `
         <div class="bg-slate-50 dark:bg-slate-800 p-2.5 rounded-xl"><span class="text-slate-400 block text-[10px]">Appellation</span><span class="font-semibold">${currentSelectedBottle.appellation || '—'}</span></div>
         <div class="bg-slate-50 dark:bg-slate-800 p-2.5 rounded-xl"><span class="text-slate-400 block text-[10px]">Region & Country</span><span class="font-semibold">${currentSelectedBottle.region}, ${currentSelectedBottle.country}</span></div>
-        <div class="bg-slate-50 dark:bg-slate-800 p-2.5 rounded-xl"><span class="text-slate-400 block text-[10px]">Category & Format</span><span class="font-semibold">${currentSelectedBottle.category} (${currentSelectedBottle.format ? currentSelectedBottle.format + ' ML' : '—'})</span></div>
-        <div class="bg-slate-50 dark:bg-slate-800 p-2.5 rounded-xl"><span class="text-slate-400 block text-[10px]">Cellar Location</span><span class="font-semibold font-mono">${currentSelectedBottle.section || '—'}</span></div>
+        <div class="bg-slate-50 dark:bg-slate-800 p-2.5 rounded-xl"><span class="text-slate-400 block text-[10px]">Category & Format</span><span class="font-semibold">${currentSelectedBottle.category} (${currentSelectedBottle.format ? currentSelectedBottle.format + ' mL' : '—'})</span></div>
+        <div class="bg-slate-50 dark:bg-slate-800 p-2.5 rounded-xl"><span class="text-slate-400 block text-[10px]">Current Stock</span><span class="font-bold text-rose-600 dark:text-rose-400 text-sm">${currentSelectedBottle.quantity} Bottles</span></div>
         <div class="bg-slate-50 dark:bg-slate-800 p-2.5 rounded-xl"><span class="text-slate-400 block text-[10px]">Maturity Window</span><span class="font-semibold">${currentSelectedBottle.maturityStart} – ${currentSelectedBottle.maturityEnd}</span></div>
         <div class="bg-slate-50 dark:bg-slate-800 p-2.5 rounded-xl"><span class="text-slate-400 block text-[10px]">Readiness</span><span class="font-semibold">${getReadinessBadge(currentSelectedBottle.readiness)}</span></div>
         <div class="bg-slate-50 dark:bg-slate-800 p-2.5 rounded-xl col-span-2 flex justify-between items-center">
@@ -654,7 +756,7 @@
             <i data-lucide="sparkles" class="w-3 h-3"></i> Estimate Value
           </button>
         </div>
-        <div class="col-span-2 bg-slate-50 dark:bg-slate-800 p-2.5 rounded-xl flex justify-between items-center"><span class="text-slate-400 text-[10px]">Current Stock</span><span class="text-base font-extrabold text-rose-500">${currentSelectedBottle.quantity} Btls</span></div>
+        <div class="col-span-2 bg-slate-50 dark:bg-slate-800 p-2.5 rounded-xl flex justify-between items-center"><span class="text-slate-400 text-[10px]">Cellar Location</span><span class="font-semibold font-mono text-sm">${currentSelectedBottle.section || '—'}</span></div>
       `;
 
       // WSET Tasting Notes
@@ -708,7 +810,6 @@ QUALITY ASSESSMENT (BLIC):
     function estimateMarketValue() {
       if (!currentSelectedBottle) return;
       
-      // Simulated market value estimate based on vintage/region
       const base = 75;
       const vintageBonus = Math.max(0, (2026 - (Number(currentSelectedBottle.vintage) || 2018)) * 8);
       const randomValue = Math.round(base + vintageBonus + (Math.random() * 25));
@@ -737,7 +838,7 @@ QUALITY ASSESSMENT (BLIC):
       document.getElementById("editRegion").value = w.region;
       document.getElementById("editCategory").value = w.category;
       document.getElementById("editCountry").value = w.country;
-      document.getElementById("editFormat").value = w.format ? w.format.toString().replace('ML','').trim() : '';
+      document.getElementById("editFormat").value = w.format ? w.format.toString().replace(/mL|ML/g, '').trim() : '';
       document.getElementById("editQuantity").value = w.quantity;
       document.getElementById("editMaturityStart").value = w.maturityStart;
       document.getElementById("editMaturityEnd").value = w.maturityEnd;
@@ -788,7 +889,7 @@ QUALITY ASSESSMENT (BLIC):
       }
     }
 
-    // Add New Bottle Modal (Clean reset of all inputs)
+    // Add New Bottle Modal
     function openAddModal() {
       document.getElementById("addWineForm").reset();
       document.getElementById("addModal").classList.remove("hidden");
@@ -832,7 +933,7 @@ QUALITY ASSESSMENT (BLIC):
       }
     }
 
-    // Label Scanner Camera Reader (Mobile iOS & Android)
+    // Label Scanner Camera Reader
     function processLabelImage(event) {
       const file = event.target.files[0];
       if (!file) return;
@@ -840,7 +941,6 @@ QUALITY ASSESSMENT (BLIC):
       closeModal("scanModal");
       document.getElementById("loadingSpinner").classList.remove("hidden");
 
-      // Convert image to Base64 and run Gemini AI parsing
       const reader = new FileReader();
       reader.onload = function(e) {
         setTimeout(() => {
@@ -884,7 +984,7 @@ QUALITY ASSESSMENT (BLIC):
       openAddModal();
     }
 
-    // Cellar Statistics Dashboard Modal
+    // Cellar Statistics Dashboard Modal (Includes Format Counts)
     function openStatsModal() {
       const totalBottles = wineInventory.reduce((sum, w) => sum + (Number(w.quantity) || 0), 0);
       const totalPaid = wineInventory.reduce((sum, w) => sum + (parseNumericPrice(w.price) * (Number(w.quantity) || 0)), 0);
@@ -933,6 +1033,25 @@ QUALITY ASSESSMENT (BLIC):
             <div class="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
               <div class="h-full ${color} rounded-full" style="width: ${pct}%"></div>
             </div>
+          </div>
+        `;
+      }).join('');
+
+      // Format breakdown
+      const formats = {};
+      wineInventory.forEach(w => {
+        const qty = Number(w.quantity) || 0;
+        const fmt = w.format ? `${w.format} mL` : 'Unspecified';
+        formats[fmt] = (formats[fmt] || 0) + qty;
+      });
+
+      const formatBars = document.getElementById("statFormatBars");
+      formatBars.innerHTML = Object.entries(formats).map(([fmt, qty]) => {
+        const pct = totalBottles > 0 ? Math.round((qty / totalBottles) * 100) : 0;
+        return `
+          <div class="bg-white dark:bg-slate-900 p-2 rounded-lg border border-slate-200 dark:border-slate-800 flex justify-between items-center">
+            <span class="font-bold text-slate-700 dark:text-slate-200">${fmt}</span>
+            <span class="font-mono text-indigo-600 dark:text-indigo-400 font-bold">${qty} btls (${pct}%)</span>
           </div>
         `;
       }).join('');
