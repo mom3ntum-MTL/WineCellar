@@ -52,14 +52,14 @@
 
       <!-- Center: Theme & Analytics Buttons -->
       <div class="flex items-center space-x-2">
-        <button onclick="toggleTheme()" class="flex items-center px-3 py-2 rounded-xl bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-700 transition" title="Toggle Light/Dark Theme">
-          <span class="text-xs font-medium mr-1.5 hidden sm:inline">App Theme</span>
+        <span class="text-xs font-medium text-slate-600 dark:text-slate-300 hidden sm:inline">App Theme</span>
+        <button onclick="toggleTheme()" class="flex items-center justify-center w-10 h-10 rounded-xl bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-700 transition" title="Toggle Light/Dark Theme">
           <i data-lucide="sun-moon" class="w-5 h-5"></i>
         </button>
-        <button onclick="openStatsModal()" class="flex items-center px-3 py-2 rounded-xl bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-700 transition" title="View Cellar Statistics">
+        <button onclick="openStatsModal()" class="flex items-center justify-center w-10 h-10 rounded-xl bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-700 transition" title="View Cellar Statistics">
           <i data-lucide="pie-chart" class="w-5 h-5"></i>
-          <span class="text-xs font-medium ml-1.5 hidden sm:inline">Statistics</span>
         </button>
+        <span class="text-xs font-medium text-slate-600 dark:text-slate-300 hidden sm:inline">Statistics</span>
       </div>
 
       <!-- Right: Actions -->
@@ -91,7 +91,7 @@
         >
       </div>
 
-      <button onclick="toggleFilterDrawer()" class="flex items-center justify-center space-x-2 px-4 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-800 rounded-xl text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-800 transition shadow-sm">
+      <button id="filtersToggleBtn" onclick="toggleFilterDrawer()" class="flex items-center justify-center space-x-2 px-4 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-800 rounded-xl text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-800 transition shadow-sm">
         <i data-lucide="sliders-horizontal" class="w-4 h-4"></i>
         <span>Filters</span>
       </button>
@@ -99,69 +99,37 @@
 
     <!-- Filter Drawer -->
     <div id="filterDrawer" class="hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 space-y-4 shadow-lg">
-      <div class="flex justify-between items-center border-b border-slate-200 dark:border-slate-800 pb-2">
-        <h3 class="text-xs uppercase font-bold text-slate-500 tracking-wider">Filter Inventory (Hold Ctrl/Cmd or Tap to Select Multiple)</h3>
-        <button onclick="clearAllFilters()" class="text-xs text-rose-500 hover:underline">Clear All Filters</button>
+      <div class="flex justify-end items-center border-b border-slate-200 dark:border-slate-800 pb-2">
+        <button onclick="clearAllFilters()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 border border-rose-400 dark:border-rose-600 hover:bg-rose-100 dark:hover:bg-rose-950/70 transition">
+          <i data-lucide="x-circle" class="w-3.5 h-3.5"></i>
+          Clear All Filters
+        </button>
       </div>
 
-      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3">
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
         <div>
           <label class="text-xs text-slate-500 mb-1 block font-semibold">Category / Style</label>
-          <select id="filterCategory" multiple onchange="applyFilters()" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg p-1.5 text-xs h-28">
-            <option value="ALL" selected>All Categories</option>
-            <option value="Red Wine">Red Wine</option>
-            <option value="White Wine">White Wine</option>
-            <option value="Sparkling Wine">Sparkling Wine</option>
-            <option value="Rosé Wine">Rosé Wine</option>
-            <option value="Orange Wine">Orange Wine</option>
-            <option value="Dessert Wine">Dessert Wine</option>
-            <option value="Fortified Wine">Fortified Wine</option>
-          </select>
+          <div id="filterCategory" data-filter-group class="flex flex-wrap gap-1.5"></div>
         </div>
 
         <div>
           <label class="text-xs text-slate-500 mb-1 block font-semibold">Readiness</label>
-          <select id="filterReadiness" multiple onchange="applyFilters()" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg p-1.5 text-xs h-28">
-            <option value="ALL" selected>All Statuses</option>
-            <option value="Can Drink Now">Can Drink Now</option>
-            <option value="Hold">Hold</option>
-            <option value="Past Peak / Matured">Past Peak / Matured</option>
-          </select>
+          <div id="filterReadiness" data-filter-group class="flex flex-wrap gap-1.5"></div>
         </div>
 
         <div>
           <label class="text-xs text-slate-500 mb-1 block font-semibold">Country</label>
-          <select id="filterCountry" multiple onchange="applyFilters()" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg p-1.5 text-xs h-28">
-            <option value="ALL" selected>All Countries</option>
-          </select>
+          <div id="filterCountry" data-filter-group class="flex flex-wrap gap-1.5"></div>
         </div>
 
-        <div>
+        <div id="filterRegionWrapper">
           <label class="text-xs text-slate-500 mb-1 block font-semibold">Region</label>
-          <select id="filterRegion" multiple onchange="applyFilters()" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg p-1.5 text-xs h-28">
-            <option value="ALL" selected>All Regions</option>
-          </select>
-        </div>
-
-        <div>
-          <label class="text-xs text-slate-500 mb-1 block font-semibold">Producer</label>
-          <select id="filterProducer" multiple onchange="applyFilters()" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg p-1.5 text-xs h-28">
-            <option value="ALL" selected>All Producers</option>
-          </select>
+          <div id="filterRegion" data-filter-group class="flex flex-wrap gap-1.5"></div>
         </div>
 
         <div>
           <label class="text-xs text-slate-500 mb-1 block font-semibold">Vintage</label>
-          <select id="filterVintage" multiple onchange="applyFilters()" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg p-1.5 text-xs h-28">
-            <option value="ALL" selected>All Vintages</option>
-          </select>
-        </div>
-
-        <div>
-          <label class="text-xs text-slate-500 mb-1 block font-semibold">Cellar Section</label>
-          <select id="filterSection" multiple onchange="applyFilters()" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg p-1.5 text-xs h-28">
-            <option value="ALL" selected>All Sections</option>
-          </select>
+          <div id="filterVintage" data-filter-group class="flex flex-wrap gap-1.5"></div>
         </div>
 
         <div>
@@ -178,7 +146,7 @@
 
     <div id="loadingSpinner" class="py-12 text-center text-slate-400 space-y-2">
       <i data-lucide="loader" class="w-8 h-8 animate-spin mx-auto text-rose-500"></i>
-      <p class="text-xs font-mono">Syncing with Google Sheets...</p>
+      <p class="text-xs font-mono">Accessing & Updating Cellar Database...</p>
     </div>
 
     <div id="tableContainer" class="hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm overflow-x-auto">
@@ -203,16 +171,30 @@
       </table>
     </div>
 
+    <div class="flex justify-center pt-2">
+      <button onclick="openArchivesModal()" class="flex items-center space-x-2 px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 text-white font-medium text-sm transition shadow-md border border-slate-700">
+        <i data-lucide="archive" class="w-4 h-4"></i>
+        <span>Consult Archives</span>
+      </button>
+    </div>
+
   </main>
 
   <div id="bottleModal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
     <div class="bg-white dark:bg-slate-900 max-w-lg w-full rounded-2xl p-6 space-y-4 border border-slate-200 dark:border-slate-800 shadow-2xl max-h-[90vh] overflow-y-auto">
       
-      <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
-        <h3 id="modalHeaderTitle" class="font-bold text-base text-slate-900 dark:text-white">Bottle Details</h3>
-        <button onclick="closeModal('bottleModal')" class="text-slate-400 hover:text-slate-600 dark:hover:text-white">
-          <i data-lucide="x" class="w-5 h-5"></i>
-        </button>
+      <div class="border-b border-slate-200 dark:border-slate-800 pb-3 space-y-2">
+        <div class="flex items-center justify-between gap-2">
+          <h3 id="modalHeaderTitle" class="font-bold text-base text-slate-900 dark:text-white truncate">Bottle Details</h3>
+          <span id="modalHeaderVintage" class="font-bold text-base text-slate-500 dark:text-slate-400 shrink-0"></span>
+          <div class="flex items-center gap-2 shrink-0">
+            <span id="modalHeaderQty" class="px-2 py-1 rounded-lg text-xs font-bold bg-rose-100 text-rose-700 dark:bg-rose-950/80 dark:text-rose-300 border border-rose-200 dark:border-rose-800"></span>
+            <button onclick="closeModal('bottleModal')" class="text-slate-400 hover:text-slate-600 dark:hover:text-white">
+              <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+          </div>
+        </div>
+        <div class="flex items-center gap-2" id="modalHeaderCatFormat"></div>
       </div>
 
       <div id="modalReadView" class="space-y-4">
@@ -221,10 +203,10 @@
         <div class="bg-slate-50 dark:bg-slate-800/60 p-3 rounded-xl border border-slate-200 dark:border-slate-700 space-y-2 text-xs">
           <div class="flex items-center justify-between">
             <span class="font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-              <i data-lucide="sparkles" class="w-4 h-4 text-indigo-500"></i> WSET Tasting Notes
+              <i data-lucide="sparkles" class="w-4 h-4 text-indigo-500"></i> Tasting Note
             </span>
             <button id="btnGenNotes" onclick="generateWSETTastingNotes()" class="text-[10px] bg-indigo-600 hover:bg-indigo-700 text-white px-2.5 py-1 rounded-lg transition font-medium">
-              ✨ Generate WSET Notes
+              ✨ Generate Tasting Note
             </button>
           </div>
           <div id="tastingNotesText" class="text-slate-600 dark:text-slate-300 leading-relaxed text-[11px] whitespace-pre-line font-mono bg-white dark:bg-slate-900/60 p-2.5 rounded-lg border border-slate-200 dark:border-slate-800 max-h-48 overflow-y-auto">
@@ -239,7 +221,7 @@
           </button>
           <button onclick="consumeBottle()" class="flex-1 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl font-medium text-xs transition flex items-center justify-center space-x-1.5">
             <i data-lucide="wine" class="w-4 h-4"></i>
-            <span>Log 1 Consumed</span>
+            <span>Drink / Remove Wine</span>
           </button>
         </div>
       </div>
@@ -359,7 +341,7 @@
 
       <div class="p-4 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 rounded-xl text-center">
         <div id="estimatedValueDisplay" class="text-2xl font-extrabold text-emerald-600 dark:text-emerald-400">$0</div>
-        <p class="text-[10px] text-slate-400 mt-1">Based on global wine auction & merchant averages</p>
+        <p class="text-[10px] text-slate-400 mt-1">Generated by Gemini from this bottle's producer, appellation, vintage, category & format</p>
       </div>
 
       <div class="flex gap-2">
@@ -414,6 +396,48 @@
           <h4 class="font-bold text-slate-700 dark:text-slate-300">Format Distribution</h4>
           <div id="statFormatBars" class="grid grid-cols-1 sm:grid-cols-2 gap-2"></div>
         </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div id="archivesModal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-900 max-w-[96vw] xl:max-w-[1600px] w-full rounded-2xl p-6 space-y-4 border border-slate-200 dark:border-slate-800 shadow-2xl max-h-[90vh] overflow-y-auto">
+
+      <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
+        <div class="flex items-center space-x-2">
+          <i data-lucide="archive" class="w-5 h-5 text-slate-500"></i>
+          <h3 class="font-bold text-base text-slate-900 dark:text-white">Archives - Consumed / Removed Wines</h3>
+        </div>
+        <button onclick="closeModal('archivesModal')" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+
+      <div id="archivesLoadingSpinner" class="py-12 text-center text-slate-400 space-y-2">
+        <i data-lucide="loader" class="w-8 h-8 animate-spin mx-auto text-rose-500"></i>
+        <p class="text-xs font-mono">Accessing & Updating Cellar Database...</p>
+      </div>
+
+      <div id="archivesTableContainer" class="hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm overflow-x-auto">
+        <table class="w-full text-left text-xs sm:text-sm whitespace-nowrap">
+          <thead class="bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-400 text-[11px] uppercase font-bold border-b border-slate-200 dark:border-slate-700 select-none">
+            <tr>
+              <th class="px-4 py-3">Producer</th>
+              <th class="px-4 py-3">Appellation</th>
+              <th class="px-4 py-3">Vintage</th>
+              <th class="px-4 py-3">Region</th>
+              <th class="px-4 py-3">Category</th>
+              <th class="px-4 py-3">Format</th>
+              <th class="px-4 py-3">Maturity</th>
+              <th class="px-4 py-3">Readiness</th>
+              <th class="px-4 py-3">Price / Value</th>
+              <th class="px-4 py-3">Qty Removed</th>
+              <th class="px-4 py-3">Date Removed</th>
+              <th class="px-4 py-3">Time in the Cellar</th>
+            </tr>
+          </thead>
+          <tbody id="archivesTableBody" class="divide-y divide-slate-100 dark:divide-slate-800 text-xs sm:text-sm">
+          </tbody>
+        </table>
       </div>
 
     </div>
@@ -520,47 +544,133 @@
 
     // Filter Menu & Logic
     function toggleFilterDrawer() {
-      document.getElementById("filterDrawer").classList.toggle("hidden");
+      const drawer = document.getElementById("filterDrawer");
+      const btn = document.getElementById("filtersToggleBtn");
+      drawer.classList.toggle("hidden");
+      const isOpen = !drawer.classList.contains("hidden");
+
+      if (isOpen) {
+        btn.classList.remove("bg-white", "dark:bg-slate-900", "border-slate-300", "dark:border-slate-800", "font-medium", "hover:bg-slate-50", "dark:hover:bg-slate-800");
+        btn.classList.add("bg-slate-300", "dark:bg-slate-700", "border-2", "border-slate-500", "dark:border-slate-400", "font-bold");
+      } else {
+        btn.classList.remove("bg-slate-300", "dark:bg-slate-700", "border-2", "border-slate-500", "dark:border-slate-400", "font-bold");
+        btn.classList.add("bg-white", "dark:bg-slate-900", "border-slate-300", "dark:border-slate-800", "font-medium", "hover:bg-slate-50", "dark:hover:bg-slate-800");
+      }
     }
+
+    // Active filter selections, keyed by filter group id, each holding a Set of selected values
+    const activeFilterSelections = {
+      filterCategory: new Set(),
+      filterReadiness: new Set(),
+      filterCountry: new Set(),
+      filterRegion: new Set(),
+      filterVintage: new Set()
+    };
+
+    const FILTER_GROUP_LABELS = {
+      filterCategory: "Category / Style",
+      filterReadiness: "Readiness",
+      filterCountry: "Country",
+      filterRegion: "Region",
+      filterVintage: "Vintage"
+    };
+
+    const STATIC_FILTER_OPTIONS = {
+      filterCategory: ["Red Wine", "White Wine", "Sparkling Wine", "Rosé Wine", "Orange Wine", "Dessert Wine", "Fortified Wine"],
+      filterReadiness: ["Can Drink Now", "Hold", "Past Peak / Matured"]
+    };
 
     function populateFilterDropdowns() {
-      const countries = [...new Set(wineInventory.map(w => w.country).filter(Boolean))];
-      const regions = [...new Set(wineInventory.map(w => w.region).filter(Boolean))];
-      const producers = [...new Set(wineInventory.map(w => w.producer).filter(Boolean))];
+      const countries = [...new Set(wineInventory.map(w => w.country).filter(Boolean))].sort();
       const vintages = [...new Set(wineInventory.map(w => w.vintage).filter(Boolean))].sort((a,b) => b - a);
-      const sections = [...new Set(wineInventory.map(w => w.section).filter(Boolean))];
 
-      populateOptions("filterCountry", countries, "All Countries");
-      populateOptions("filterRegion", regions, "All Regions");
-      populateOptions("filterProducer", producers, "All Producers");
-      populateOptions("filterVintage", vintages, "All Vintages");
-      populateOptions("filterSection", sections, "All Sections");
+      renderFilterGroup("filterCategory", STATIC_FILTER_OPTIONS.filterCategory);
+      renderFilterGroup("filterReadiness", STATIC_FILTER_OPTIONS.filterReadiness);
+      renderFilterGroup("filterCountry", countries);
+      renderFilterGroup("filterVintage", vintages);
+      renderRegionOptions();
     }
 
-    function populateOptions(elemId, items, defaultLabel) {
-      const select = document.getElementById(elemId);
-      select.innerHTML = `<option value="ALL" selected>${defaultLabel}</option>` + items.map(item => `<option value="${item}">${item}</option>`).join('');
-    }
+    // Regions shown depend on selected Country/ies. Until a country is chosen, show nothing but a hint.
+    function renderRegionOptions() {
+      const countryFilter = activeFilterSelections.filterCountry;
+      const container = document.getElementById("filterRegion");
 
-    function getSelectedValues(selectId) {
-      const select = document.getElementById(selectId);
-      if (!select) return [];
-      const selected = Array.from(select.selectedOptions).map(opt => opt.value);
-      return selected;
-    }
+      if (countryFilter.size === 0) {
+        activeFilterSelections.filterRegion.clear();
+        if (container) {
+          container.innerHTML = `<span class="text-[11px] text-slate-400 italic">Select a Country to see its regions</span>`;
+        }
+        return;
+      }
 
-    function clearSingleFilter(selectId, valueToRemove) {
-      const select = document.getElementById(selectId);
-      if (!select) return;
+      const pool = wineInventory.filter(w => countryFilter.has(String(w.country)));
+      const regions = [...new Set(pool.map(w => w.region).filter(Boolean))].sort();
 
-      Array.from(select.options).forEach(opt => {
-        if (opt.value === valueToRemove) opt.selected = false;
+      // Drop any active region selections that are no longer valid for the current country pool
+      const validRegionSet = new Set(regions);
+      Array.from(activeFilterSelections.filterRegion).forEach(r => {
+        if (!validRegionSet.has(r)) activeFilterSelections.filterRegion.delete(r);
       });
 
-      if (select.selectedOptions.length === 0) {
-        const allOpt = Array.from(select.options).find(o => o.value === "ALL");
-        if (allOpt) allOpt.selected = true;
+      renderFilterGroup("filterRegion", regions);
+    }
+
+    function renderFilterGroup(groupId, items) {
+      const container = document.getElementById(groupId);
+      if (!container) return;
+      const selectedSet = activeFilterSelections[groupId];
+
+      container.innerHTML = items.map(item => {
+        const isActive = selectedSet.has(String(item));
+        const activeClasses = "bg-blue-600 text-white border-blue-600";
+        const inactiveClasses = "bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700";
+        return `<button type="button" onclick="toggleFilterValue('${groupId}', '${String(item).replace(/'/g, "\\'")}')" class="px-2 py-1 rounded-lg text-[11px] font-medium border transition ${isActive ? activeClasses : inactiveClasses}">${item}</button>`;
+      }).join('');
+    }
+
+    function toggleFilterValue(groupId, value) {
+      const selectedSet = activeFilterSelections[groupId];
+      if (selectedSet.has(value)) {
+        selectedSet.delete(value);
+      } else {
+        selectedSet.add(value);
       }
+      refreshFilterGroupDisplay(groupId);
+
+      if (groupId === "filterCountry") {
+        renderRegionOptions();
+      }
+
+      applyFilters();
+    }
+
+    function refreshFilterGroupDisplay(groupId) {
+      const container = document.getElementById(groupId);
+      if (!container) return;
+      Array.from(container.children).forEach(btn => {
+        const value = btn.innerText;
+        const isActive = activeFilterSelections[groupId].has(value);
+        btn.classList.toggle("bg-blue-600", isActive);
+        btn.classList.toggle("text-white", isActive);
+        btn.classList.toggle("border-blue-600", isActive);
+        btn.classList.toggle("bg-slate-50", !isActive);
+        btn.classList.toggle("dark:bg-slate-800", !isActive);
+        btn.classList.toggle("text-slate-600", !isActive);
+        btn.classList.toggle("dark:text-slate-300", !isActive);
+        btn.classList.toggle("border-slate-300", !isActive);
+        btn.classList.toggle("dark:border-slate-700", !isActive);
+      });
+    }
+
+    function clearSingleFilter(groupId, valueToRemove) {
+      activeFilterSelections[groupId].delete(valueToRemove);
+      refreshFilterGroupDisplay(groupId);
+
+      if (groupId === "filterCountry") {
+        renderRegionOptions();
+      }
+
       applyFilters();
     }
 
@@ -569,54 +679,49 @@
       document.getElementById("filterPriceMin").value = "";
       document.getElementById("filterPriceMax").value = "";
 
-      ["filterCategory", "filterReadiness", "filterCountry", "filterRegion", "filterProducer", "filterVintage", "filterSection"].forEach(id => {
-        const select = document.getElementById(id);
-        if (select) {
-          Array.from(select.options).forEach(opt => opt.selected = (opt.value === "ALL"));
-        }
+      Object.keys(activeFilterSelections).forEach(groupId => {
+        activeFilterSelections[groupId].clear();
       });
+      renderRegionOptions();
+      Object.keys(activeFilterSelections).forEach(groupId => refreshFilterGroupDisplay(groupId));
       applyFilters();
     }
 
     function applyFilters() {
       const search = document.getElementById("searchInput").value.toLowerCase();
-      const minPrice = parseFloat(document.getElementById("filterPriceMin").value);
-      const maxPrice = parseFloat(document.getElementById("filterPriceMax").value);
+      const minPriceRaw = document.getElementById("filterPriceMin").value;
+      const maxPriceRaw = document.getElementById("filterPriceMax").value;
+      const minPrice = parseFloat(minPriceRaw);
+      const maxPrice = parseFloat(maxPriceRaw);
 
-      const catFilter = getSelectedValues("filterCategory");
-      const readFilter = getSelectedValues("filterReadiness");
-      const countryFilter = getSelectedValues("filterCountry");
-      const regionFilter = getSelectedValues("filterRegion");
-      const producerFilter = getSelectedValues("filterProducer");
-      const vintageFilter = getSelectedValues("filterVintage");
-      const secFilter = getSelectedValues("filterSection");
+      const catFilter = activeFilterSelections.filterCategory;
+      const readFilter = activeFilterSelections.filterReadiness;
+      const countryFilter = activeFilterSelections.filterCountry;
+      const regionFilter = activeFilterSelections.filterRegion;
+      const vintageFilter = activeFilterSelections.filterVintage;
 
       const chipsBar = document.getElementById("activeFiltersBar");
       let chipsHtml = "";
 
-      const addChips = (selectId, values) => {
-        values.forEach(v => {
-          if (v !== "ALL") chipsHtml += createChip(selectId, v);
-        });
+      const addChips = (groupId, valuesSet) => {
+        valuesSet.forEach(v => { chipsHtml += createChip(groupId, v); });
       };
 
       addChips("filterCategory", catFilter);
       addChips("filterReadiness", readFilter);
       addChips("filterCountry", countryFilter);
       addChips("filterRegion", regionFilter);
-      addChips("filterProducer", producerFilter);
       addChips("filterVintage", vintageFilter);
-      addChips("filterSection", secFilter);
 
-      if (!isNaN(minPrice)) chipsHtml += createChipCustom(`Min Price: $${minPrice}`, () => { document.getElementById("filterPriceMin").value = ""; applyFilters(); });
-      if (!isNaN(maxPrice)) chipsHtml += createChipCustom(`Max Price: $${maxPrice}`, () => { document.getElementById("filterPriceMax").value = ""; applyFilters(); });
+      if (minPriceRaw !== "" && !isNaN(minPrice)) chipsHtml += createChipCustom(`Min Price: $${minPrice}`, "clearPriceFilter('min')");
+      if (maxPriceRaw !== "" && !isNaN(maxPrice)) chipsHtml += createChipCustom(`Max Price: $${maxPrice}`, "clearPriceFilter('max')");
 
       chipsBar.innerHTML = chipsHtml;
       lucide.createIcons();
 
-      const isMatchMulti = (filterArray, wineValue) => {
-        if (filterArray.length === 0 || filterArray.includes("ALL")) return true;
-        return filterArray.includes(String(wineValue));
+      const isMatchMulti = (filterSet, wineValue) => {
+        if (filterSet.size === 0) return true;
+        return filterSet.has(String(wineValue));
       };
 
       const filtered = wineInventory.filter(w => {
@@ -633,32 +738,36 @@
         const matchesRead = isMatchMulti(readFilter, w.readiness);
         const matchesCountry = isMatchMulti(countryFilter, w.country);
         const matchesRegion = isMatchMulti(regionFilter, w.region);
-        const matchesProducer = isMatchMulti(producerFilter, w.producer);
         const matchesVintage = isMatchMulti(vintageFilter, w.vintage);
-        const matchesSec = isMatchMulti(secFilter, w.section);
 
         const matchesMinPrice = isNaN(minPrice) || winePrice >= minPrice;
         const matchesMaxPrice = isNaN(maxPrice) || winePrice <= maxPrice;
 
-        return matchesSearch && matchesCat && matchesRead && matchesCountry && matchesRegion && matchesProducer && matchesVintage && matchesSec && matchesMinPrice && matchesMaxPrice;
+        return matchesSearch && matchesCat && matchesRead && matchesCountry && matchesRegion && matchesVintage && matchesMinPrice && matchesMaxPrice;
       });
 
       renderTable(filtered);
     }
 
-    function createChip(selectId, filterValue) {
-      return `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-rose-100 dark:bg-rose-950/80 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800">
+    function clearPriceFilter(which) {
+      if (which === 'min') document.getElementById("filterPriceMin").value = "";
+      if (which === 'max') document.getElementById("filterPriceMax").value = "";
+      applyFilters();
+    }
+
+    function createChip(groupId, filterValue) {
+      return `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-blue-100 dark:bg-blue-950/80 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
         <span>${filterValue}</span>
-        <button onclick="clearSingleFilter('${selectId}', '${filterValue.replace(/'/g, "\\'")}')" class="hover:text-rose-900 dark:hover:text-rose-100 transition focus:outline-none">
+        <button onclick="clearSingleFilter('${groupId}', '${filterValue.replace(/'/g, "\\'")}')" class="hover:text-blue-900 dark:hover:text-blue-100 transition focus:outline-none">
           <i data-lucide="x" class="w-3.5 h-3.5"></i>
         </button>
       </span>`;
     }
 
-    function createChipCustom(text, removeFn) {
-      return `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+    function createChipCustom(text, onClickFnCall) {
+      return `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-blue-100 dark:bg-blue-950/80 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
         <span>${text}</span>
-        <button onclick="(${removeFn})()" class="hover:text-emerald-900 dark:hover:text-emerald-100 transition focus:outline-none">
+        <button onclick="${onClickFnCall}" class="hover:text-blue-900 dark:hover:text-blue-100 transition focus:outline-none">
           <i data-lucide="x" class="w-3.5 h-3.5"></i>
         </button>
       </span>`;
@@ -672,7 +781,14 @@
         .toLowerCase();
     }
 
-    // Sort Table Accent-Insensitive
+    // Extracts just the first word of a normalized string, for "first letter of first word" sorting
+    function firstWord(str) {
+      const normalized = normalizeStr(str).trim();
+      if (!normalized) return '';
+      return normalized.split(/\s+/)[0];
+    }
+
+    // Sort Table Accent-Insensitive, Alphabetical Columns Compared by First Word Only
     function sortTable(column) {
       if (sortColumn === column) {
         sortAscending = !sortAscending;
@@ -682,15 +798,16 @@
       }
 
       wineInventory.sort((a, b) => {
-        let valA = normalizeStr(a[column]);
-        let valB = normalizeStr(b[column]);
-
         // Numeric comparison for numeric fields
         if (column === 'vintage' || column === 'quantity' || column === 'price' || column === 'value' || column === 'format') {
           let numA = parseNumericPrice(a[column]);
           let numB = parseNumericPrice(b[column]);
           return sortAscending ? numA - numB : numB - numA;
         }
+
+        // Text fields: compare by first word only
+        let valA = firstWord(a[column]);
+        let valB = firstWord(b[column]);
 
         if (valA < valB) return sortAscending ? -1 : 1;
         if (valA > valB) return sortAscending ? 1 : -1;
@@ -732,27 +849,32 @@
       `).join('');
     }
 
-    // Open Read Details Modal (Location and Stock Swapped)
+    // Open Read Details Modal
     function openBottleDetails(id) {
       currentSelectedBottle = wineInventory.find(w => w.id === id);
       if (!currentSelectedBottle) return;
 
-      document.getElementById("modalHeaderTitle").innerText = `${currentSelectedBottle.producer} (${currentSelectedBottle.vintage || 'NV'})`;
-      
+      document.getElementById("modalHeaderTitle").innerText = currentSelectedBottle.producer;
+      document.getElementById("modalHeaderVintage").innerText = currentSelectedBottle.vintage || 'NV';
+      document.getElementById("modalHeaderQty").innerText = `${currentSelectedBottle.quantity} in stock`;
+      document.getElementById("modalHeaderCatFormat").innerHTML = `
+        ${getCategoryBadge(currentSelectedBottle.category)}
+        <span class="px-2 py-0.5 text-[10px] rounded-md font-medium bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300 border border-slate-200 dark:border-slate-700">${currentSelectedBottle.format ? currentSelectedBottle.format + ' mL' : 'Format —'}</span>
+      `;
+
       const grid = document.getElementById("modalDetailsGrid");
       grid.innerHTML = `
         <div class="bg-slate-50 dark:bg-slate-800 p-2.5 rounded-xl"><span class="text-slate-400 block text-[10px]">Appellation</span><span class="font-semibold">${currentSelectedBottle.appellation || '—'}</span></div>
-        <div class="bg-slate-50 dark:bg-slate-800 p-2.5 rounded-xl"><span class="text-slate-400 block text-[10px]">Region & Country</span><span class="font-semibold">${currentSelectedBottle.region}, ${currentSelectedBottle.country}</span></div>
-        <div class="bg-slate-50 dark:bg-slate-800 p-2.5 rounded-xl"><span class="text-slate-400 block text-[10px]">Category & Format</span><span class="font-semibold">${currentSelectedBottle.category} (${currentSelectedBottle.format ? currentSelectedBottle.format + ' mL' : '—'})</span></div>
-        <div class="bg-slate-50 dark:bg-slate-800 p-2.5 rounded-xl"><span class="text-slate-400 block text-[10px]">Current Stock</span><span class="font-bold text-rose-600 dark:text-rose-400 text-sm">${currentSelectedBottle.quantity} Bottles</span></div>
-        <div class="bg-slate-50 dark:bg-slate-800 p-2.5 rounded-xl"><span class="text-slate-400 block text-[10px]">Maturity Window</span><span class="font-semibold">${currentSelectedBottle.maturityStart} – ${currentSelectedBottle.maturityEnd}</span></div>
+        <div class="bg-slate-50 dark:bg-slate-800 p-2.5 rounded-xl"><span class="text-slate-400 block text-[10px]">Region / Country</span><span class="font-semibold">${currentSelectedBottle.region}, ${currentSelectedBottle.country}</span></div>
         <div class="bg-slate-50 dark:bg-slate-800 p-2.5 rounded-xl"><span class="text-slate-400 block text-[10px]">Readiness</span><span class="font-semibold">${getReadinessBadge(currentSelectedBottle.readiness)}</span></div>
-        <div class="bg-slate-50 dark:bg-slate-800 p-2.5 rounded-xl col-span-2 flex justify-between items-center">
+        <div class="bg-slate-50 dark:bg-slate-800 p-2.5 rounded-xl"><span class="text-slate-400 block text-[10px]">Maturity</span><span class="font-semibold">${currentSelectedBottle.maturityStart} – ${currentSelectedBottle.maturityEnd}</span></div>
+        <div class="bg-slate-50 dark:bg-slate-800 p-2.5 rounded-xl"><span class="text-slate-400 block text-[10px]">Price Paid</span><span class="font-semibold">${formatCurrency(currentSelectedBottle.price)}</span></div>
+        <div class="bg-slate-50 dark:bg-slate-800 p-2.5 rounded-xl flex justify-between items-center">
           <div>
-            <span class="text-slate-400 block text-[10px]">Price Paid / Market Value</span>
-            <span class="font-semibold">${formatCurrency(currentSelectedBottle.price)} / ${formatCurrency(currentSelectedBottle.value)}</span>
+            <span class="text-slate-400 block text-[10px]">Market Value</span>
+            <span class="font-semibold">${formatCurrency(currentSelectedBottle.value)}</span>
           </div>
-          <button onclick="estimateMarketValue()" class="px-2.5 py-1 bg-indigo-100 text-indigo-700 dark:bg-indigo-950/80 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 rounded-lg text-[10px] font-semibold hover:bg-indigo-200 transition flex items-center gap-1">
+          <button id="btnEstimateValue" onclick="estimateMarketValue()" class="px-2 py-1 bg-indigo-100 text-indigo-700 dark:bg-indigo-950/80 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 rounded-lg text-[10px] font-semibold hover:bg-indigo-200 transition flex items-center gap-1 shrink-0">
             <i data-lucide="sparkles" class="w-3 h-3"></i> Estimate Value
           </button>
         </div>
@@ -799,24 +921,42 @@ QUALITY ASSESSMENT (BLIC):
         notesElem.innerText = generatedWSETNote;
 
         btn.innerText = "Saved to Sheet!";
-        setTimeout(() => { btn.innerText = "✨ Generate WSET Notes"; btn.disabled = false; }, 2500);
+        setTimeout(() => { btn.innerText = "✨ Generate Tasting Note"; btn.disabled = false; }, 2500);
 
         // Save back to Google Sheet Column P
         await sendPostRequest("MODIFY", currentSelectedBottle);
       }, 1400);
     }
 
-    // Market Value Estimation with Confirmation Prompt
-    function estimateMarketValue() {
+    // Market Value Estimation via Gemini (columns D–H: appellation, producer, vintage, category, format)
+    async function estimateMarketValue() {
       if (!currentSelectedBottle) return;
-      
-      const base = 75;
-      const vintageBonus = Math.max(0, (2026 - (Number(currentSelectedBottle.vintage) || 2018)) * 8);
-      const randomValue = Math.round(base + vintageBonus + (Math.random() * 25));
-      
-      tempEstimatedValue = `$${randomValue}`;
-      document.getElementById("estimatedValueDisplay").innerText = tempEstimatedValue;
-      document.getElementById("valueConfirmModal").classList.remove("hidden");
+
+      const btn = document.getElementById("btnEstimateValue");
+      const originalBtnHtml = btn ? btn.innerHTML : null;
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = `<i data-lucide="loader" class="w-3 h-3 animate-spin"></i> Estimating...`;
+        lucide.createIcons();
+      }
+
+      try {
+        const result = await sendPostRequest("ESTIMATE_VALUE", currentSelectedBottle, true);
+
+        if (result && result.status === "success" && result.value) {
+          tempEstimatedValue = result.value.toString().trim();
+          document.getElementById("estimatedValueDisplay").innerText = tempEstimatedValue;
+          document.getElementById("valueConfirmModal").classList.remove("hidden");
+        } else {
+          alert("Gemini could not produce a valuation for this bottle. Please try again.");
+        }
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = originalBtnHtml;
+          lucide.createIcons();
+        }
+      }
     }
 
     async function acceptEstimatedValue() {
@@ -880,13 +1020,30 @@ QUALITY ASSESSMENT (BLIC):
       await sendPostRequest("MODIFY", updatedBottle);
     }
 
-    // Log 1 Consumed
+    // Drink / Remove Wine — prompts for a quantity (≤ current stock), archives that quantity
+    // (full row A-P + Date Removed) to the Archives sheet, decrements Inventory by that amount,
+    // and removes the Inventory row once it reaches 0.
     async function consumeBottle() {
-      if (currentSelectedBottle && currentSelectedBottle.quantity > 0) {
-        currentSelectedBottle.quantity -= 1;
-        closeModal("bottleModal");
-        await sendPostRequest("MODIFY", currentSelectedBottle);
+      if (!currentSelectedBottle || currentSelectedBottle.quantity <= 0) return;
+
+      const stock = currentSelectedBottle.quantity;
+      const input = prompt(`How many bottles of "${currentSelectedBottle.producer}" would you like to drink/remove? (1–${stock})`, "1");
+
+      if (input === null) return; // user cancelled
+
+      const qtyToRemove = parseInt(input, 10);
+
+      if (!Number.isInteger(qtyToRemove) || qtyToRemove <= 0) {
+        alert("Please enter a valid whole number greater than 0.");
+        return;
       }
+      if (qtyToRemove > stock) {
+        alert(`You only have ${stock} bottle${stock !== 1 ? 's' : ''} in stock. Please enter ${stock} or fewer.`);
+        return;
+      }
+
+      closeModal("bottleModal");
+      await sendPostRequest("DRINK", { ...currentSelectedBottle, drinkQuantity: qtyToRemove });
     }
 
     // Add New Bottle Modal
@@ -918,18 +1075,26 @@ QUALITY ASSESSMENT (BLIC):
       await sendPostRequest("ADD", newWine);
     }
 
-    // Send POST payload to Apps Script API
-    async function sendPostRequest(actionType, dataPayload) {
+    // Send POST payload to Apps Script API. Returns the parsed JSON response.
+    // Pass skipRefresh=true for read-only calls (e.g. AI estimates) that don't change the sheet data.
+    async function sendPostRequest(actionType, dataPayload, skipRefresh) {
       document.getElementById("loadingSpinner").classList.remove("hidden");
       try {
-        await fetch(API_URL, {
+        const response = await fetch(API_URL, {
           method: "POST",
           headers: { "Content-Type": "text/plain" },
           body: JSON.stringify({ action: actionType, data: dataPayload })
         });
-        await fetchInventory();
+        const result = await response.json();
+        if (!skipRefresh) {
+          await fetchInventory();
+        }
+        return result;
       } catch (err) {
         console.error("Save error:", err);
+        return { status: "error", message: err.toString() };
+      } finally {
+        document.getElementById("loadingSpinner").classList.add("hidden");
       }
     }
 
@@ -1057,6 +1222,85 @@ QUALITY ASSESSMENT (BLIC):
       }).join('');
 
       document.getElementById("statsModal").classList.remove("hidden");
+    }
+
+    // Archives Dashboard — shows drank/removed wines, most recently removed first
+    let archiveInventory = [];
+
+    async function openArchivesModal() {
+      document.getElementById("archivesModal").classList.remove("hidden");
+      document.getElementById("archivesLoadingSpinner").classList.remove("hidden");
+      document.getElementById("archivesTableContainer").classList.add("hidden");
+      lucide.createIcons();
+
+      try {
+        const response = await fetch(`${API_URL}?sheet=archives`);
+        archiveInventory = await response.json();
+
+        archiveInventory.forEach(w => w.readiness = getReadiness(w));
+
+        // Sort by Date Removed, most recent first
+        archiveInventory.sort((a, b) => new Date(b.dateRemoved) - new Date(a.dateRemoved));
+
+        renderArchivesTable(archiveInventory);
+      } catch (err) {
+        console.error("Failed to load archives:", err);
+      } finally {
+        document.getElementById("archivesLoadingSpinner").classList.add("hidden");
+        document.getElementById("archivesTableContainer").classList.remove("hidden");
+      }
+    }
+
+    // Computes elapsed time between Date Added and Date Removed, formatted as "X years & Y months"
+    function formatTimeInCellar(dateAddedStr, dateRemovedStr) {
+      if (!dateAddedStr || !dateRemovedStr) return '—';
+
+      const start = new Date(dateAddedStr);
+      const end = new Date(dateRemovedStr);
+      if (isNaN(start) || isNaN(end)) return '—';
+
+      let totalMonths = (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth());
+      if (end.getDate() < start.getDate()) totalMonths -= 1;
+      if (totalMonths < 0) totalMonths = 0;
+
+      const years = Math.floor(totalMonths / 12);
+      const months = totalMonths % 12;
+
+      const yearPart = years > 0 ? `${years} year${years !== 1 ? 's' : ''}` : '';
+      const monthPart = months > 0 ? `${months} month${months !== 1 ? 's' : ''}` : '';
+
+      if (yearPart && monthPart) return `${yearPart} & ${monthPart}`;
+      if (yearPart) return yearPart;
+      if (monthPart) return monthPart;
+      return 'Less than a month';
+    }
+
+    function renderArchivesTable(data) {
+      const tbody = document.getElementById("archivesTableBody");
+
+      if (data.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="11" class="py-8 text-center text-slate-400">No archived wines yet.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = data.map(wine => `
+        <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
+          <td class="px-4 py-3 font-bold text-slate-900 dark:text-white">${wine.producer}</td>
+          <td class="px-4 py-3 font-bold text-slate-900 dark:text-white">${wine.appellation || '—'}</td>
+          <td class="px-4 py-3 font-bold text-slate-900 dark:text-white">${wine.vintage || 'NV'}</td>
+          <td class="px-4 py-3">${wine.region ? wine.region + ', ' : ''}${wine.country}</td>
+          <td class="px-4 py-3">${getCategoryBadge(wine.category)}</td>
+          <td class="px-4 py-3 text-slate-500">${wine.format ? wine.format + ' mL' : '—'}</td>
+          <td class="px-4 py-3 text-xs">${wine.maturityStart && wine.maturityEnd ? wine.maturityStart + '–' + wine.maturityEnd : '—'}</td>
+          <td class="px-4 py-3">${getReadinessBadge(wine.readiness)}</td>
+          <td class="px-4 py-3">${formatCurrency(wine.price)} / ${formatCurrency(wine.value)}</td>
+          <td class="px-4 py-3 font-bold text-rose-600 dark:text-rose-400">${wine.quantity}</td>
+          <td class="px-4 py-3 text-xs text-slate-500">${wine.dateRemoved || '—'}</td>
+          <td class="px-4 py-3 text-xs font-semibold text-indigo-600 dark:text-indigo-400">${formatTimeInCellar(wine.dateAdded, wine.dateRemoved)}</td>
+        </tr>
+      `).join('');
+
+      lucide.createIcons();
     }
   </script>
 </body>
