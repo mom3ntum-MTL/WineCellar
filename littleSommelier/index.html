@@ -69,22 +69,6 @@
             <p class="text-xs text-slate-400 mt-1">Gemini will identify the wine and build a full tasting profile</p>
           </div>
         </div>
-
-        <div class="mt-6 w-full">
-          <p class="text-[11px] font-bold text-slate-500 dark:text-slate-400 mb-2 text-center uppercase tracking-wide">Bottle format</p>
-          <div class="grid grid-cols-2 gap-3">
-            <button onclick="selectFormat('750')" id="formatBtn750" class="format-btn flex flex-col items-center gap-1.5 py-3 rounded-2xl border-2 transition">
-              <i data-lucide="wine" class="w-6 h-6"></i>
-              <span class="text-xs font-bold">750 mL</span>
-              <span class="text-[10px] text-slate-400">Standard</span>
-            </button>
-            <button onclick="selectFormat('1500')" id="formatBtn1500" class="format-btn flex flex-col items-center gap-1.5 py-3 rounded-2xl border-2 transition">
-              <i data-lucide="wine" class="w-8 h-8"></i>
-              <span class="text-xs font-bold">1.5 L</span>
-              <span class="text-[10px] text-slate-400">Magnum</span>
-            </button>
-          </div>
-        </div>
       </div>
 
       <!-- SCREEN 2: Loading -->
@@ -148,11 +132,11 @@
           <!-- Quality Score -->
           <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm">
             <span class="font-bold text-xs text-slate-700 dark:text-slate-300 flex items-center gap-1.5 mb-3">
-              <i data-lucide="star" class="w-3.5 h-3.5 text-amber-500"></i> Quality Score
+              <i data-lucide="star" class="w-3.5 h-3.5 text-blue-500"></i> Quality Score
             </span>
             <div class="flex items-center justify-between">
               <div id="resultQualityDots" class="flex items-center gap-1.5"></div>
-              <span id="resultQualityLabel" class="text-sm font-extrabold text-amber-600 dark:text-amber-400"></span>
+              <span id="resultQualityLabel" class="text-sm font-extrabold text-blue-600 dark:text-blue-400"></span>
             </div>
           </div>
 
@@ -180,10 +164,28 @@
 
           <!-- Market Value & Drinking Window (fetched on demand) -->
           <div id="valuationSection" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm">
-            <button id="valuationBtn" onclick="fetchValuation()" class="w-full flex items-center justify-center gap-2 py-1 text-xs font-bold text-emerald-600 dark:text-emerald-400">
+            <button id="valuationBtn" onclick="promptValuationFormat()" class="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-emerald-400 hover:bg-emerald-500 text-white font-bold text-xs transition shadow-sm">
               <i data-lucide="tag" class="w-3.5 h-3.5"></i>
-              <span>Get market value &amp; drinking window</span>
+              <span>Generate MARKET VALUE &amp; DRINKING WINDOW for this wine</span>
             </button>
+
+            <!-- Contextual format prompt: format affects the value/window estimate, so it's
+                 only asked here, right before the request that actually needs it. -->
+            <div id="valuationFormatPrompt" class="hidden space-y-2.5 pt-1">
+              <p class="text-[11px] font-bold text-slate-500 dark:text-slate-400 text-center uppercase tracking-wide">What format is this bottle?</p>
+              <div class="grid grid-cols-2 gap-2.5">
+                <button onclick="selectValuationFormat('750')" id="valFormatBtn750" class="format-btn flex flex-col items-center gap-1 py-2.5 rounded-xl border-2 transition">
+                  <i data-lucide="wine" class="w-5 h-5"></i>
+                  <span class="text-xs font-bold">750 mL</span>
+                  <span class="text-[10px] text-slate-400">Standard</span>
+                </button>
+                <button onclick="selectValuationFormat('1500')" id="valFormatBtn1500" class="format-btn flex flex-col items-center gap-1 py-2.5 rounded-xl border-2 transition">
+                  <i data-lucide="wine" class="w-6 h-6"></i>
+                  <span class="text-xs font-bold">1.5 L</span>
+                  <span class="text-[10px] text-slate-400">Magnum</span>
+                </button>
+              </div>
+            </div>
 
             <div id="valuationResults" class="hidden grid grid-cols-2 gap-4 pt-1">
               <div>
@@ -209,8 +211,8 @@
           </div>
 
           <!-- Exam note button -->
-          <button id="examNoteBtn" onclick="generateExamNote()" class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-medium text-sm transition flex items-center justify-center gap-2 shadow-md">
-            <i data-lucide="graduation-cap" class="w-4 h-4"></i>
+          <button id="examNoteBtn" onclick="generateExamNote()" class="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-sky-400 hover:bg-sky-500 text-white font-bold text-xs transition shadow-sm">
+            <i data-lucide="graduation-cap" class="w-3.5 h-3.5"></i>
             <span>Get a full WSET Level 3 tasting note</span>
           </button>
 
@@ -239,8 +241,8 @@
   // =========================================================================
   const API_URL = "https://script.google.com/macros/s/AKfycbz38Oi1JyRQ3X77RYojgRu4koYs78Y5BOX6FjK6xKlZ-SqmcBb3RlE9TQVzMfNcj1GI/exec";
 
-  let selectedFormat = "750";
   let currentWineData = null; // holds the last analysis result in memory only — never persisted
+  let pendingValuationFormat = "750"; // format chosen in the contextual prompt before fetching valuation
 
   // ---- Theme (only thing kept in localStorage — a UI preference, not wine data) ----
   function applyTheme(isDark) {
@@ -258,28 +260,6 @@
     applyTheme(saved ? saved === 'dark' : prefersDark);
   })();
 
-  // ---- Format selector ----
-  function selectFormat(fmt) {
-    selectedFormat = fmt;
-    updateFormatButtons();
-  }
-  function updateFormatButtons() {
-    const btn750 = document.getElementById('formatBtn750');
-    const btn1500 = document.getElementById('formatBtn1500');
-    const activeClasses = ['border-rose-500', 'bg-rose-50', 'dark:bg-rose-950/40', 'text-rose-600', 'dark:text-rose-400'];
-    const inactiveClasses = ['border-slate-200', 'dark:border-slate-700', 'bg-white', 'dark:bg-slate-900', 'text-slate-500', 'dark:text-slate-400'];
-
-    [btn750, btn1500].forEach(btn => {
-      btn.classList.remove(...activeClasses, ...inactiveClasses);
-    });
-
-    const active = selectedFormat === '750' ? btn750 : btn1500;
-    const inactive = selectedFormat === '750' ? btn1500 : btn750;
-    active.classList.add(...activeClasses);
-    inactive.classList.add(...inactiveClasses);
-  }
-  updateFormatButtons();
-
   // ---- Screen switching ----
   function showScreen(name) {
     ['captureScreen', 'loadingScreen', 'errorScreen', 'resultsScreen'].forEach(id => {
@@ -293,7 +273,7 @@
     document.getElementById('examNoteText').innerHTML = '';
     const examBtn = document.getElementById('examNoteBtn');
     examBtn.disabled = false;
-    examBtn.innerHTML = `<i data-lucide="graduation-cap" class="w-4 h-4"></i><span>Get a full WSET Level 3 tasting note</span>`;
+    examBtn.innerHTML = `<i data-lucide="graduation-cap" class="w-3.5 h-3.5"></i><span>Get a full WSET Level 3 tasting note</span>`;
     document.getElementById('valuationResults').classList.add('hidden');
     document.getElementById('valuationBtn').classList.remove('hidden');
     resetValuationButton();
@@ -319,8 +299,7 @@
 
       const result = await callApi("ANALYZE_WINE", {
         imageBase64: base64Data,
-        imageMimeType: file.type || "image/jpeg",
-        format: selectedFormat
+        imageMimeType: file.type || "image/jpeg"
       });
 
       if (result && result.status === "success" && result.data) {
@@ -386,8 +365,8 @@
 
     let dotsHtml = '';
     for (let i = 1; i <= 5; i++) {
-      const filled = i <= clamped;
-      dotsHtml += `<span class="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold border-2 transition ${filled ? 'bg-amber-500 border-amber-500 text-white' : 'bg-transparent border-slate-200 dark:border-slate-700 text-slate-300 dark:text-slate-600'}">${i}</span>`;
+      const isTheScore = i === clamped; // only the actual achieved number gets highlighted
+      dotsHtml += `<span class="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold border-2 transition ${isTheScore ? 'bg-blue-600 border-blue-600 text-white' : 'bg-transparent border-slate-200 dark:border-slate-700 text-slate-300 dark:text-slate-600'}">${i}</span>`;
     }
     dotsContainer.innerHTML = dotsHtml;
     labelEl.innerText = QUALITY_LABELS[clamped] || '';
@@ -430,23 +409,58 @@
   function resetValuationButton() {
     const btn = document.getElementById('valuationBtn');
     btn.disabled = false;
-    btn.innerHTML = `<i data-lucide="tag" class="w-3.5 h-3.5"></i><span>Get market value &amp; drinking window</span>`;
+    btn.classList.remove('hidden');
+    btn.innerHTML = `<i data-lucide="tag" class="w-3.5 h-3.5"></i><span>Generate MARKET VALUE &amp; DRINKING WINDOW for this wine</span>`;
+    document.getElementById('valuationFormatPrompt').classList.add('hidden');
+    lucide.createIcons();
   }
 
-  // On-demand Market Value + Drinking Window — deliberately NOT part of the initial
-  // scan. This is the slower, 3-pass-averaged call (see GET_VALUATION in Code.gs),
-  // so keeping it behind a button means the fast initial identification isn't held
-  // up waiting on numbers most people won't check every single time.
-  async function fetchValuation() {
-    if (!currentWineData) return;
-    const btn = document.getElementById('valuationBtn');
+  // Step 1: reveal the contextual format prompt instead of fetching immediately —
+  // format materially changes the market value and drinking window, so it needs to
+  // be captured right before the request that actually uses it, not upfront at scan time.
+  function promptValuationFormat() {
+    document.getElementById('valuationBtn').classList.add('hidden');
+    document.getElementById('valuationFormatPrompt').classList.remove('hidden');
+    selectValuationFormat(pendingValuationFormat); // reflect current default selection visually
+  }
 
-    btn.disabled = true;
-    btn.innerHTML = `<i data-lucide="loader" class="w-3.5 h-3.5 animate-spin"></i><span>Checking value & drinking window...</span>`;
+  function selectValuationFormat(fmt) {
+    pendingValuationFormat = fmt;
+    const btn750 = document.getElementById('valFormatBtn750');
+    const btn1500 = document.getElementById('valFormatBtn1500');
+    const activeClasses = ['border-emerald-500', 'bg-emerald-50', 'dark:bg-emerald-950/40', 'text-emerald-600', 'dark:text-emerald-400'];
+    const inactiveClasses = ['border-slate-200', 'dark:border-slate-700', 'bg-white', 'dark:bg-slate-900', 'text-slate-500', 'dark:text-slate-400'];
+
+    [btn750, btn1500].forEach(btn => btn.classList.remove(...activeClasses, ...inactiveClasses));
+
+    const active = fmt === '750' ? btn750 : btn1500;
+    const inactive = fmt === '750' ? btn1500 : btn750;
+    active.classList.add(...activeClasses);
+    inactive.classList.add(...inactiveClasses);
+
+    fetchValuation(fmt);
+  }
+
+  // Step 2: On-demand Market Value + Drinking Window — deliberately NOT part of the
+  // initial scan. This is the slower, 3-pass-averaged call (see GET_VALUATION in
+  // Code.gs), so keeping it behind a button means the fast initial identification
+  // isn't held up waiting on numbers most people won't check every single time.
+  async function fetchValuation(format) {
+    if (!currentWineData) return;
+
+    document.getElementById('valuationFormatPrompt').classList.add('hidden');
+
+    // Show a temporary loading state where the format prompt was
+    const loadingHtml = `<div class="flex items-center justify-center gap-2 py-2 text-xs font-bold text-emerald-600 dark:text-emerald-400"><i data-lucide="loader" class="w-3.5 h-3.5 animate-spin"></i><span>Checking value &amp; drinking window...</span></div>`;
+    const formatPromptEl = document.getElementById('valuationFormatPrompt');
+    const loadingEl = document.createElement('div');
+    loadingEl.id = 'valuationLoadingState';
+    loadingEl.innerHTML = loadingHtml;
+    formatPromptEl.insertAdjacentElement('afterend', loadingEl);
     lucide.createIcons();
 
     try {
-      const result = await callApi("GET_VALUATION", { identity: currentWineData.identity });
+      const result = await callApi("GET_VALUATION", { identity: currentWineData.identity, format: format || pendingValuationFormat });
 
       if (result && result.status === "success" && result.data) {
         const mv = result.data.marketValue || {};
@@ -458,7 +472,6 @@
         document.getElementById('resultDrinkingWindowNote').innerText = dw.note || '';
 
         document.getElementById('valuationResults').classList.remove('hidden');
-        btn.classList.add('hidden');
       } else {
         const reason = (result && result.message) ? result.message : "Unknown error";
         alert(`Gemini could not fetch a valuation.\n\nReason: ${reason}`);
@@ -468,6 +481,8 @@
       console.error(err);
       resetValuationButton();
     } finally {
+      const loadingState = document.getElementById('valuationLoadingState');
+      if (loadingState) loadingState.remove();
       lucide.createIcons();
     }
   }
@@ -478,7 +493,7 @@
     const btn = document.getElementById('examNoteBtn');
     const originalHtml = btn.innerHTML;
     btn.disabled = true;
-    btn.innerHTML = `<i data-lucide="loader" class="w-4 h-4 animate-spin"></i><span>Writing tasting note...</span>`;
+    btn.innerHTML = `<i data-lucide="loader" class="w-3.5 h-3.5 animate-spin"></i><span>Writing tasting note...</span>`;
     lucide.createIcons();
 
     try {
@@ -492,7 +507,7 @@
         const bolded = escaped.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>").replace(/\n/g, "<br>");
         document.getElementById('examNoteText').innerHTML = bolded;
         document.getElementById('examNoteCard').classList.remove('hidden');
-        btn.innerHTML = `<i data-lucide="check" class="w-4 h-4"></i><span>WSET tasting note ready below</span>`;
+        btn.innerHTML = `<i data-lucide="check" class="w-3.5 h-3.5"></i><span>WSET tasting note ready below</span>`;
       } else {
         const reason = (result && result.message) ? result.message : "Unknown error";
         alert(`Gemini could not generate the exam note.\n\nReason: ${reason}`);
