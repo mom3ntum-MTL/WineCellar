@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0f172a">
+<title>my little Sommelier app</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+<script>
+  tailwind.config = { darkMode: 'class' };
+</script>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+  .safe-top { padding-top: env(safe-area-inset-top); }
+  .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
+  @keyframes roulette-spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(1440deg); }
+  }
+  .scan-pulse { animation: scan-pulse 1.6s ease-in-out infinite; }
+  @keyframes scan-pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.6; transform: scale(0.96); }
+  }
+  .fade-in { animation: fade-in 0.35s ease both; }
+  @keyframes fade-in {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+</style>
+</head>
+<body class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 min-h-screen transition-colors">
+
+  <div class="max-w-md mx-auto min-h-screen flex flex-col safe-top safe-bottom">
+
+    <!-- Header -->
+    <header class="px-5 pt-5 pb-3 flex items-center justify-between">
+      <div class="flex items-center gap-2.5">
+        <div class="p-2 bg-rose-100 dark:bg-rose-950/80 border border-rose-300 dark:border-rose-500/30 rounded-xl text-rose-600 dark:text-rose-500">
+          <i data-lucide="wine" class="w-5 h-5"></i>
+        </div>
+        <div>
+          <h1 class="text-base font-bold tracking-tight leading-tight">my little Sommelier app</h1>
+          <p class="text-[10px] italic text-slate-400 dark:text-slate-500">by <span class="font-bold not-italic">mom3ntum</span></p>
+        </div>
+      </div>
+      <button onclick="toggleTheme()" class="flex items-center justify-center w-9 h-9 rounded-xl bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-700 transition">
+        <i data-lucide="sun-moon" class="w-4 h-4"></i>
+      </button>
+    </header>
+
+    <!-- Main -->
+    <main class="flex-1 px-5 pb-8 flex flex-col">
+
+      <!-- SCREEN 1: Capture -->
+      <div id="captureScreen" class="flex-1 flex flex-col">
+
+        <input type="file" id="labelCameraInput" accept="image/*" capture="environment" class="hidden" onchange="handleImageSelected(event)">
+
+        <div onclick="document.getElementById('labelCameraInput').click()" class="flex-1 min-h-[280px] border-2 border-dashed border-indigo-400/40 hover:border-indigo-500 rounded-3xl flex flex-col items-center justify-center gap-3 cursor-pointer transition bg-indigo-50/50 dark:bg-indigo-950/20 text-center px-8">
+          <div class="p-4 bg-indigo-100 dark:bg-indigo-950/70 rounded-2xl text-indigo-600 dark:text-indigo-400">
+            <i data-lucide="camera" class="w-9 h-9"></i>
+          </div>
+          <div>
+            <p class="text-sm font-bold text-slate-700 dark:text-slate-200">Tap to photograph a label</p>
+            <p class="text-xs text-slate-400 mt-1">Gemini will identify the wine and build a full tasting profile</p>
+          </div>
+        </div>
+
+        <div class="mt-5">
+          <p class="text-[11px] font-bold text-slate-500 dark:text-slate-400 mb-2 text-center uppercase tracking-wide">Bottle format</p>
+          <div class="grid grid-cols-2 gap-3">
+            <button onclick="selectFormat('750')" id="formatBtn750" class="format-btn flex flex-col items-center gap-1.5 py-3 rounded-2xl border-2 transition">
+              <i data-lucide="wine" class="w-6 h-6"></i>
+              <span class="text-xs font-bold">750 mL</span>
+              <span class="text-[10px] text-slate-400">Standard</span>
+            </button>
+            <button onclick="selectFormat('1500')" id="formatBtn1500" class="format-btn flex flex-col items-center gap-1.5 py-3 rounded-2xl border-2 transition">
+              <i data-lucide="wine" class="w-8 h-8"></i>
+              <span class="text-xs font-bold">1.5 L</span>
+              <span class="text-[10px] text-slate-400">Magnum</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- SCREEN 2: Loading -->
+      <div id="loadingScreen" class="hidden flex-1 flex flex-col items-center justify-center gap-4 text-center px-8">
+        <div class="scan-pulse p-5 bg-rose-100 dark:bg-rose-950/80 rounded-3xl text-rose-600 dark:text-rose-500">
+          <i data-lucide="sparkles" class="w-10 h-10"></i>
+        </div>
+        <div>
+          <p class="text-sm font-bold text-slate-700 dark:text-slate-200">Reading the label...</p>
+          <p class="text-xs text-slate-400 mt-1">Gemini is identifying the wine and building your tasting profile</p>
+        </div>
+      </div>
+
+      <!-- SCREEN 3: Error -->
+      <div id="errorScreen" class="hidden flex-1 flex flex-col items-center justify-center gap-4 text-center px-8">
+        <div class="p-5 bg-amber-100 dark:bg-amber-950/60 rounded-3xl text-amber-600 dark:text-amber-400">
+          <i data-lucide="alert-triangle" class="w-10 h-10"></i>
+        </div>
+        <div>
+          <p class="text-sm font-bold text-slate-700 dark:text-slate-200">Couldn't read that label</p>
+          <p id="errorMessage" class="text-xs text-slate-400 mt-1">Something went wrong.</p>
+        </div>
+        <button onclick="resetToCapture()" class="px-5 py-2.5 bg-rose-600 hover:bg-rose-500 text-white rounded-xl font-medium text-sm transition">Try again</button>
+      </div>
+
+      <!-- SCREEN 4: Results -->
+      <div id="resultsScreen" class="hidden flex-1 flex flex-col">
+
+        <div class="fade-in space-y-4">
+
+          <!-- Identity card -->
+          <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm">
+            <div class="flex items-start justify-between gap-2">
+              <div>
+                <h2 id="resultProducer" class="font-bold text-lg text-slate-900 dark:text-white leading-tight"></h2>
+                <p id="resultAppellation" class="text-sm text-slate-500 dark:text-slate-400"></p>
+              </div>
+              <span id="resultVintage" class="shrink-0 px-2.5 py-1 rounded-lg text-sm font-bold bg-rose-100 text-rose-700 dark:bg-rose-950/80 dark:text-rose-300 border border-rose-200 dark:border-rose-800"></span>
+            </div>
+            <div class="flex items-center gap-2 mt-3">
+              <span id="resultCategoryBadge"></span>
+              <span id="resultRegionBadge" class="px-2 py-0.5 text-[10px] rounded-md font-medium bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300 border border-slate-200 dark:border-slate-700"></span>
+            </div>
+          </div>
+
+          <!-- Facts & Story -->
+          <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm space-y-1.5">
+            <span class="font-bold text-xs text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+              <i data-lucide="book-open" class="w-3.5 h-3.5 text-indigo-500"></i> Facts & Story
+            </span>
+            <p id="resultFacts" class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed"></p>
+          </div>
+
+          <!-- Market Value -->
+          <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm">
+            <span class="font-bold text-xs text-slate-700 dark:text-slate-300 flex items-center gap-1.5 mb-2">
+              <i data-lucide="tag" class="w-3.5 h-3.5 text-emerald-500"></i> Market Value
+            </span>
+            <div class="flex items-baseline gap-2">
+              <span id="resultMarketValue" class="text-2xl font-extrabold text-emerald-600 dark:text-emerald-400"></span>
+              <span class="text-[10px] text-slate-400">CAD</span>
+            </div>
+            <p id="resultMarketNote" class="text-[11px] text-slate-400 mt-1"></p>
+          </div>
+
+          <!-- Tasting Profile -->
+          <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm space-y-3">
+            <span class="font-bold text-xs text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+              <i data-lucide="wine" class="w-3.5 h-3.5 text-rose-500"></i> Tasting Profile
+            </span>
+
+            <div class="space-y-2.5 text-xs">
+              <div>
+                <p class="font-bold text-slate-500 dark:text-slate-400 text-[10px] uppercase tracking-wide mb-0.5">Nose</p>
+                <p id="resultNose" class="text-slate-600 dark:text-slate-300 leading-relaxed"></p>
+              </div>
+              <div class="border-t border-slate-100 dark:border-slate-800 pt-2.5">
+                <p class="font-bold text-slate-500 dark:text-slate-400 text-[10px] uppercase tracking-wide mb-0.5">Palate</p>
+                <p id="resultPalate" class="text-slate-600 dark:text-slate-300 leading-relaxed"></p>
+              </div>
+              <div class="border-t border-slate-100 dark:border-slate-800 pt-2.5">
+                <p class="font-bold text-slate-500 dark:text-slate-400 text-[10px] uppercase tracking-wide mb-0.5">Flavours</p>
+                <p id="resultFlavours" class="text-slate-600 dark:text-slate-300 leading-relaxed"></p>
+              </div>
+              <div class="border-t border-slate-100 dark:border-slate-800 pt-2.5">
+                <p class="font-bold text-slate-500 dark:text-slate-400 text-[10px] uppercase tracking-wide mb-0.5">Quality</p>
+                <p id="resultQuality" class="text-slate-600 dark:text-slate-300 leading-relaxed"></p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Exam note button -->
+          <button id="examNoteBtn" onclick="generateExamNote()" class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-medium text-sm transition flex items-center justify-center gap-2 shadow-md">
+            <i data-lucide="graduation-cap" class="w-4 h-4"></i>
+            <span>Get full WSET Level 3 exam note</span>
+          </button>
+
+          <!-- Exam note result -->
+          <div id="examNoteCard" class="hidden bg-white dark:bg-slate-900 border border-indigo-200 dark:border-indigo-900 rounded-2xl p-4 shadow-sm space-y-2 fade-in">
+            <span class="font-bold text-xs text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+              <i data-lucide="graduation-cap" class="w-3.5 h-3.5 text-indigo-500"></i> WSET Level 3 Exam Note
+            </span>
+            <div id="examNoteText" class="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed"></div>
+          </div>
+
+          <button onclick="resetToCapture()" class="w-full py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-2xl font-medium text-sm transition flex items-center justify-center gap-2">
+            <i data-lucide="camera" class="w-4 h-4"></i>
+            <span>Scan another bottle</span>
+          </button>
+
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+<script>
+  // =========================================================================
+  // CONFIG — paste your Apps Script Web App deployment URL here.
+  // =========================================================================
+  const API_URL = "https://script.google.com/macros/s/AKfycbz38Oi1JyRQ3X77RYojgRu4koYs78Y5BOX6FjK6xKlZ-SqmcBb3RlE9TQVzMfNcj1GI/exec";
+
+  let selectedFormat = "750";
+  let currentWineData = null; // holds the last analysis result in memory only — never persisted
+
+  // ---- Theme (only thing kept in localStorage — a UI preference, not wine data) ----
+  function applyTheme(isDark) {
+    document.documentElement.classList.toggle('dark', isDark);
+  }
+  function toggleTheme() {
+    const isDark = !document.documentElement.classList.contains('dark');
+    applyTheme(isDark);
+    try { localStorage.setItem('sommelier-theme', isDark ? 'dark' : 'light'); } catch (e) { /* ignore */ }
+  }
+  (function initTheme() {
+    let saved = null;
+    try { saved = localStorage.getItem('sommelier-theme'); } catch (e) { /* ignore */ }
+    const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    applyTheme(saved ? saved === 'dark' : prefersDark);
+  })();
+
+  // ---- Format selector ----
+  function selectFormat(fmt) {
+    selectedFormat = fmt;
+    updateFormatButtons();
+  }
+  function updateFormatButtons() {
+    const btn750 = document.getElementById('formatBtn750');
+    const btn1500 = document.getElementById('formatBtn1500');
+    const activeClasses = ['border-rose-500', 'bg-rose-50', 'dark:bg-rose-950/40', 'text-rose-600', 'dark:text-rose-400'];
+    const inactiveClasses = ['border-slate-200', 'dark:border-slate-700', 'bg-white', 'dark:bg-slate-900', 'text-slate-500', 'dark:text-slate-400'];
+
+    [btn750, btn1500].forEach(btn => {
+      btn.classList.remove(...activeClasses, ...inactiveClasses);
+    });
+
+    const active = selectedFormat === '750' ? btn750 : btn1500;
+    const inactive = selectedFormat === '750' ? btn1500 : btn750;
+    active.classList.add(...activeClasses);
+    inactive.classList.add(...inactiveClasses);
+  }
+  updateFormatButtons();
+
+  // ---- Screen switching ----
+  function showScreen(name) {
+    ['captureScreen', 'loadingScreen', 'errorScreen', 'resultsScreen'].forEach(id => {
+      document.getElementById(id).classList.toggle('hidden', id !== name);
+    });
+  }
+
+  function resetToCapture() {
+    currentWineData = null;
+    document.getElementById('examNoteCard').classList.add('hidden');
+    document.getElementById('examNoteText').innerHTML = '';
+    const examBtn = document.getElementById('examNoteBtn');
+    examBtn.disabled = false;
+    examBtn.innerHTML = `<i data-lucide="graduation-cap" class="w-4 h-4"></i><span>Get full WSET Level 3 exam note</span>`;
+    document.getElementById('labelCameraInput').value = '';
+    showScreen('captureScreen');
+    lucide.createIcons();
+  }
+
+  // ---- Capture & analyze ----
+  async function handleImageSelected(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    showScreen('loadingScreen');
+
+    try {
+      const base64Data = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result.split(',')[1]);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+
+      const result = await callApi("ANALYZE_WINE", {
+        imageBase64: base64Data,
+        imageMimeType: file.type || "image/jpeg",
+        format: selectedFormat
+      });
+
+      if (result && result.status === "success" && result.data) {
+        currentWineData = result.data;
+        renderResults(currentWineData);
+        showScreen('resultsScreen');
+      } else {
+        showError((result && result.message) ? result.message : "Gemini could not analyze this label.");
+      }
+    } catch (err) {
+      console.error(err);
+      showError("Something went wrong reading the photo. Please try again.");
+    } finally {
+      lucide.createIcons();
+    }
+  }
+
+  function showError(message) {
+    document.getElementById('errorMessage').innerText = message;
+    showScreen('errorScreen');
+  }
+
+  const CATEGORY_STYLES = {
+    "Red Wine": "bg-rose-100 text-rose-700 dark:bg-rose-950/80 dark:text-rose-300 border-rose-200 dark:border-rose-800",
+    "White Wine": "bg-amber-100 text-amber-700 dark:bg-amber-950/80 dark:text-amber-300 border-amber-200 dark:border-amber-800",
+    "Sparkling Wine": "bg-sky-100 text-sky-700 dark:bg-sky-950/80 dark:text-sky-300 border-sky-200 dark:border-sky-800",
+    "Rosé Wine": "bg-pink-100 text-pink-700 dark:bg-pink-950/80 dark:text-pink-300 border-pink-200 dark:border-pink-800",
+    "Orange Wine": "bg-orange-100 text-orange-700 dark:bg-orange-950/80 dark:text-orange-300 border-orange-200 dark:border-orange-800",
+    "Dessert Wine": "bg-fuchsia-100 text-fuchsia-700 dark:bg-fuchsia-950/80 dark:text-fuchsia-300 border-fuchsia-200 dark:border-fuchsia-800",
+    "Fortified Wine": "bg-violet-100 text-violet-700 dark:bg-violet-950/80 dark:text-violet-300 border-violet-200 dark:border-violet-800"
+  };
+
+  function getCategoryBadge(category) {
+    const styles = CATEGORY_STYLES[category] || "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300 border-slate-200 dark:border-slate-700";
+    return `<span class="px-2 py-0.5 text-[10px] rounded-md font-medium border ${styles}">${category || 'Wine'}</span>`;
+  }
+
+  function renderResults(w) {
+    const id = w.identity || {};
+    document.getElementById('resultProducer').innerText = id.producer || 'Unknown Producer';
+    document.getElementById('resultAppellation').innerText = id.appellation || '—';
+    document.getElementById('resultVintage').innerText = id.vintage || 'NV';
+    document.getElementById('resultCategoryBadge').innerHTML = getCategoryBadge(id.category);
+    document.getElementById('resultRegionBadge').innerText = [id.region, id.country].filter(Boolean).join(', ') || '—';
+
+    document.getElementById('resultFacts').innerText = w.facts || '—';
+
+    const mv = w.marketValue || {};
+    document.getElementById('resultMarketValue').innerText = mv.estimate || '—';
+    document.getElementById('resultMarketNote').innerText = mv.note || '';
+
+    const tp = w.tastingProfile || {};
+    document.getElementById('resultNose').innerText = tp.nose || '—';
+    document.getElementById('resultPalate').innerText = tp.palate || '—';
+    document.getElementById('resultFlavours').innerText = tp.flavours || '—';
+    document.getElementById('resultQuality').innerText = tp.quality || '—';
+
+    lucide.createIcons();
+  }
+
+  // ---- WSET exam note (follow-up call, text-only, reuses the identity already extracted) ----
+  async function generateExamNote() {
+    if (!currentWineData) return;
+    const btn = document.getElementById('examNoteBtn');
+    const originalHtml = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = `<i data-lucide="loader" class="w-4 h-4 animate-spin"></i><span>Writing exam note...</span>`;
+    lucide.createIcons();
+
+    try {
+      const result = await callApi("GENERATE_EXAM_NOTE", { identity: currentWineData.identity });
+
+      if (result && result.status === "success" && result.note) {
+        const escaped = String(result.note)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;");
+        const bolded = escaped.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>").replace(/\n/g, "<br>");
+        document.getElementById('examNoteText').innerHTML = bolded;
+        document.getElementById('examNoteCard').classList.remove('hidden');
+        btn.innerHTML = `<i data-lucide="check" class="w-4 h-4"></i><span>Exam note ready below</span>`;
+      } else {
+        const reason = (result && result.message) ? result.message : "Unknown error";
+        alert(`Gemini could not generate the exam note.\n\nReason: ${reason}`);
+        btn.innerHTML = originalHtml;
+        btn.disabled = false;
+      }
+    } catch (err) {
+      console.error(err);
+      btn.innerHTML = originalHtml;
+      btn.disabled = false;
+    } finally {
+      lucide.createIcons();
+    }
+  }
+
+  // ---- API relay ----
+  async function callApi(action, data) {
+    const response = await fetch(API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain" },
+      body: JSON.stringify({ action, data })
+    });
+    return await response.json();
+  }
+
+  lucide.createIcons();
+</script>
+</body>
+</html>
