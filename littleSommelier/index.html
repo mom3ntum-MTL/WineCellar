@@ -145,26 +145,14 @@
             <p id="resultFacts" class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed"></p>
           </div>
 
-          <!-- Market Value & Drinking Window -->
-          <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm grid grid-cols-2 gap-4">
-            <div>
-              <span class="font-bold text-xs text-slate-700 dark:text-slate-300 flex items-center gap-1.5 mb-2">
-                <i data-lucide="tag" class="w-3.5 h-3.5 text-emerald-500"></i> Market Value
-              </span>
-              <div class="flex items-baseline gap-1.5">
-                <span id="resultMarketValue" class="text-xl font-extrabold text-emerald-600 dark:text-emerald-400"></span>
-                <span class="text-[10px] text-slate-400">CAD</span>
-              </div>
-              <p id="resultMarketNote" class="text-[10px] text-slate-400 mt-1 leading-snug"></p>
-            </div>
-            <div class="border-l border-slate-100 dark:border-slate-800 pl-4">
-              <span class="font-bold text-xs text-slate-700 dark:text-slate-300 flex items-center gap-1.5 mb-2">
-                <i data-lucide="calendar-clock" class="w-3.5 h-3.5 text-indigo-500"></i> Drinking Window
-              </span>
-              <div class="flex items-baseline gap-1">
-                <span id="resultDrinkingWindow" class="text-xl font-extrabold text-indigo-600 dark:text-indigo-400"></span>
-              </div>
-              <p id="resultDrinkingWindowNote" class="text-[10px] text-slate-400 mt-1 leading-snug"></p>
+          <!-- Quality Score -->
+          <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm">
+            <span class="font-bold text-xs text-slate-700 dark:text-slate-300 flex items-center gap-1.5 mb-3">
+              <i data-lucide="star" class="w-3.5 h-3.5 text-amber-500"></i> Quality Score
+            </span>
+            <div class="flex items-center justify-between">
+              <div id="resultQualityDots" class="flex items-center gap-1.5"></div>
+              <span id="resultQualityLabel" class="text-sm font-extrabold text-amber-600 dark:text-amber-400"></span>
             </div>
           </div>
 
@@ -187,9 +175,35 @@
                 <p class="font-bold text-slate-500 dark:text-slate-400 text-[10px] uppercase tracking-wide mb-0.5">Flavours</p>
                 <p id="resultFlavours" class="text-slate-600 dark:text-slate-300 leading-relaxed"></p>
               </div>
-              <div class="border-t border-slate-100 dark:border-slate-800 pt-2.5">
-                <p class="font-bold text-slate-500 dark:text-slate-400 text-[10px] uppercase tracking-wide mb-0.5">Quality</p>
-                <p id="resultQuality" class="text-slate-600 dark:text-slate-300 leading-relaxed"></p>
+            </div>
+          </div>
+
+          <!-- Market Value & Drinking Window (fetched on demand) -->
+          <div id="valuationSection" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm">
+            <button id="valuationBtn" onclick="fetchValuation()" class="w-full flex items-center justify-center gap-2 py-1 text-xs font-bold text-emerald-600 dark:text-emerald-400">
+              <i data-lucide="tag" class="w-3.5 h-3.5"></i>
+              <span>Get market value &amp; drinking window</span>
+            </button>
+
+            <div id="valuationResults" class="hidden grid grid-cols-2 gap-4 pt-1">
+              <div>
+                <span class="font-bold text-xs text-slate-700 dark:text-slate-300 flex items-center gap-1.5 mb-2">
+                  <i data-lucide="tag" class="w-3.5 h-3.5 text-emerald-500"></i> Market Value
+                </span>
+                <div class="flex items-baseline gap-1.5">
+                  <span id="resultMarketValue" class="text-xl font-extrabold text-emerald-600 dark:text-emerald-400"></span>
+                  <span class="text-[10px] text-slate-400">CAD</span>
+                </div>
+                <p id="resultMarketNote" class="text-[10px] text-slate-400 mt-1 leading-snug"></p>
+              </div>
+              <div class="border-l border-slate-100 dark:border-slate-800 pl-4">
+                <span class="font-bold text-xs text-slate-700 dark:text-slate-300 flex items-center gap-1.5 mb-2">
+                  <i data-lucide="calendar-clock" class="w-3.5 h-3.5 text-indigo-500"></i> Drinking Window
+                </span>
+                <div class="flex items-baseline gap-1">
+                  <span id="resultDrinkingWindow" class="text-xl font-extrabold text-indigo-600 dark:text-indigo-400"></span>
+                </div>
+                <p id="resultDrinkingWindowNote" class="text-[10px] text-slate-400 mt-1 leading-snug"></p>
               </div>
             </div>
           </div>
@@ -280,6 +294,9 @@
     const examBtn = document.getElementById('examNoteBtn');
     examBtn.disabled = false;
     examBtn.innerHTML = `<i data-lucide="graduation-cap" class="w-4 h-4"></i><span>Get a full WSET Level 3 tasting note</span>`;
+    document.getElementById('valuationResults').classList.add('hidden');
+    document.getElementById('valuationBtn').classList.remove('hidden');
+    resetValuationButton();
     document.getElementById('labelCameraInput').value = '';
     showScreen('captureScreen');
     lucide.createIcons();
@@ -360,6 +377,22 @@
       .join('');
   }
 
+  const QUALITY_LABELS = { 1: "Poor", 2: "Acceptable", 3: "Good", 4: "Very Good", 5: "Exceptional" };
+
+  function renderQualityScore(score) {
+    const dotsContainer = document.getElementById('resultQualityDots');
+    const labelEl = document.getElementById('resultQualityLabel');
+    const clamped = Math.max(1, Math.min(5, parseInt(score, 10) || 3));
+
+    let dotsHtml = '';
+    for (let i = 1; i <= 5; i++) {
+      const filled = i <= clamped;
+      dotsHtml += `<span class="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold border-2 transition ${filled ? 'bg-amber-500 border-amber-500 text-white' : 'bg-transparent border-slate-200 dark:border-slate-700 text-slate-300 dark:text-slate-600'}">${i}</span>`;
+    }
+    dotsContainer.innerHTML = dotsHtml;
+    labelEl.innerText = QUALITY_LABELS[clamped] || '';
+  }
+
   function renderResults(w) {
     const id = w.identity || {};
     document.getElementById('resultProducer').innerText = id.producer || 'Unknown Producer';
@@ -378,21 +411,65 @@
 
     document.getElementById('resultFacts').innerText = w.facts || '—';
 
-    const mv = w.marketValue || {};
-    document.getElementById('resultMarketValue').innerText = mv.estimate || '—';
-    document.getElementById('resultMarketNote').innerText = mv.note || '';
-
-    const dw = w.drinkingWindow || {};
-    document.getElementById('resultDrinkingWindow').innerText = (dw.startYear && dw.endYear) ? `${dw.startYear}–${dw.endYear}` : '—';
-    document.getElementById('resultDrinkingWindowNote').innerText = dw.note || '';
+    const qs = w.qualityScore || {};
+    renderQualityScore(qs.score);
 
     const tp = w.tastingProfile || {};
     document.getElementById('resultNose').innerText = tp.nose || '—';
     document.getElementById('resultPalate').innerText = tp.palate || '—';
     document.getElementById('resultFlavours').innerText = tp.flavours || '—';
-    document.getElementById('resultQuality').innerText = tp.quality || '—';
+
+    // Reset the on-demand valuation section for a fresh scan
+    document.getElementById('valuationResults').classList.add('hidden');
+    document.getElementById('valuationBtn').classList.remove('hidden');
+    resetValuationButton();
 
     lucide.createIcons();
+  }
+
+  function resetValuationButton() {
+    const btn = document.getElementById('valuationBtn');
+    btn.disabled = false;
+    btn.innerHTML = `<i data-lucide="tag" class="w-3.5 h-3.5"></i><span>Get market value &amp; drinking window</span>`;
+  }
+
+  // On-demand Market Value + Drinking Window — deliberately NOT part of the initial
+  // scan. This is the slower, 3-pass-averaged call (see GET_VALUATION in Code.gs),
+  // so keeping it behind a button means the fast initial identification isn't held
+  // up waiting on numbers most people won't check every single time.
+  async function fetchValuation() {
+    if (!currentWineData) return;
+    const btn = document.getElementById('valuationBtn');
+
+    btn.disabled = true;
+    btn.innerHTML = `<i data-lucide="loader" class="w-3.5 h-3.5 animate-spin"></i><span>Checking value & drinking window...</span>`;
+    lucide.createIcons();
+
+    try {
+      const result = await callApi("GET_VALUATION", { identity: currentWineData.identity });
+
+      if (result && result.status === "success" && result.data) {
+        const mv = result.data.marketValue || {};
+        const dw = result.data.drinkingWindow || {};
+
+        document.getElementById('resultMarketValue').innerText = mv.estimate || '—';
+        document.getElementById('resultMarketNote').innerText = mv.note || '';
+        document.getElementById('resultDrinkingWindow').innerText = (dw.startYear && dw.endYear) ? `${dw.startYear}–${dw.endYear}` : '—';
+        document.getElementById('resultDrinkingWindowNote').innerText = dw.note || '';
+
+        document.getElementById('valuationResults').classList.remove('hidden');
+        btn.classList.add('hidden');
+      } else {
+        const reason = (result && result.message) ? result.message : "Unknown error";
+        alert(`Gemini could not fetch a valuation.\n\nReason: ${reason}`);
+        resetValuationButton();
+      }
+    } catch (err) {
+      console.error(err);
+      resetValuationButton();
+    } finally {
+      lucide.createIcons();
+    }
   }
 
   // ---- WSET exam note (follow-up call, text-only, reuses the identity already extracted) ----
