@@ -138,16 +138,27 @@
             <p id="resultFacts" class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed"></p>
           </div>
 
-          <!-- Market Value -->
-          <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm">
-            <span class="font-bold text-xs text-slate-700 dark:text-slate-300 flex items-center gap-1.5 mb-2">
-              <i data-lucide="tag" class="w-3.5 h-3.5 text-emerald-500"></i> Market Value
-            </span>
-            <div class="flex items-baseline gap-2">
-              <span id="resultMarketValue" class="text-2xl font-extrabold text-emerald-600 dark:text-emerald-400"></span>
-              <span class="text-[10px] text-slate-400">CAD</span>
+          <!-- Market Value & Drinking Window -->
+          <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm grid grid-cols-2 gap-4">
+            <div>
+              <span class="font-bold text-xs text-slate-700 dark:text-slate-300 flex items-center gap-1.5 mb-2">
+                <i data-lucide="tag" class="w-3.5 h-3.5 text-emerald-500"></i> Market Value
+              </span>
+              <div class="flex items-baseline gap-1.5">
+                <span id="resultMarketValue" class="text-xl font-extrabold text-emerald-600 dark:text-emerald-400"></span>
+                <span class="text-[10px] text-slate-400">CAD</span>
+              </div>
+              <p id="resultMarketNote" class="text-[10px] text-slate-400 mt-1 leading-snug"></p>
             </div>
-            <p id="resultMarketNote" class="text-[11px] text-slate-400 mt-1"></p>
+            <div class="border-l border-slate-100 dark:border-slate-800 pl-4">
+              <span class="font-bold text-xs text-slate-700 dark:text-slate-300 flex items-center gap-1.5 mb-2">
+                <i data-lucide="calendar-clock" class="w-3.5 h-3.5 text-indigo-500"></i> Drinking Window
+              </span>
+              <div class="flex items-baseline gap-1">
+                <span id="resultDrinkingWindow" class="text-xl font-extrabold text-indigo-600 dark:text-indigo-400"></span>
+              </div>
+              <p id="resultDrinkingWindowNote" class="text-[10px] text-slate-400 mt-1 leading-snug"></p>
+            </div>
           </div>
 
           <!-- Tasting Profile -->
@@ -336,6 +347,10 @@
     const mv = w.marketValue || {};
     document.getElementById('resultMarketValue').innerText = mv.estimate || '—';
     document.getElementById('resultMarketNote').innerText = mv.note || '';
+
+    const dw = w.drinkingWindow || {};
+    document.getElementById('resultDrinkingWindow').innerText = (dw.startYear && dw.endYear) ? `${dw.startYear}–${dw.endYear}` : '—';
+    document.getElementById('resultDrinkingWindowNote').innerText = dw.note || '';
 
     const tp = w.tastingProfile || {};
     document.getElementById('resultNose').innerText = tp.nose || '—';
