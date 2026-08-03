@@ -1,14 +1,14 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Wine Cellars Hub</title>
-  
+
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="theme-color" content="#0b0f19">
+  <meta name="theme-color" content="#f8fafc">
 
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
@@ -21,84 +21,134 @@
 
   <style>
     body {
-      background-color: #0b0f19;
-      color: #f1f5f9;
+      background-color: #f8fafc;
+      color: #0f172a;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     }
+    html.dark body {
+      background-color: #0b0f19;
+      color: #f1f5f9;
+    }
     .glass-card {
-      background: rgba(22, 30, 46, 0.7);
+      background: rgba(255, 255, 255, 0.75);
       backdrop-filter: blur(12px);
-      border: 1px solid rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(15, 23, 42, 0.08);
       transition: all 0.2s ease-in-out;
     }
     .glass-card:hover {
       border-color: rgba(225, 29, 72, 0.4);
       transform: translateY(-2px);
     }
+    html.dark .glass-card {
+      background: rgba(22, 30, 46, 0.7);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
   </style>
 </head>
 <body class="min-h-screen flex flex-col justify-between antialiased">
 
-  <header class="border-b border-slate-800/80 bg-slate-900/60 backdrop-blur-md px-4 py-4">
+  <header class="border-b border-slate-200 dark:border-slate-800/80 bg-white/70 dark:bg-slate-900/60 backdrop-blur-md px-4 py-4">
     <div class="max-w-4xl mx-auto flex items-center space-x-3">
-      <div class="p-2.5 bg-rose-950/80 border border-rose-500/30 rounded-2xl text-rose-500">
+      <div class="p-2.5 bg-rose-100 dark:bg-rose-950/80 border border-rose-300 dark:border-rose-500/30 rounded-2xl text-rose-600 dark:text-rose-500">
         <i data-lucide="wine" class="w-6 h-6"></i>
       </div>
       <div>
-        <h1 class="text-xl font-bold tracking-tight text-white">Wine Cellars Hub</h1>
-        <p class="text-xs text-slate-400">Select a cellar to view inventory</p>
+        <h1 class="text-xl font-bold tracking-tight text-slate-900 dark:text-white">Wine Cellars Hub</h1>
+        <p class="text-xs text-slate-500 dark:text-slate-400">Select a cellar to view inventory</p>
       </div>
     </div>
   </header>
 
-  <main class="max-w-4xl w-full mx-auto px-4 py-8 space-y-6 my-auto">
-    
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+  <main class="max-w-4xl w-full mx-auto px-4 py-8 space-y-8 my-auto">
 
-      <a href="./M&S/" class="glass-card rounded-2xl p-6 flex flex-col justify-between group cursor-pointer shadow-xl">
-        <div class="space-y-3">
-          <div class="flex items-center justify-between">
-            <span class="px-2.5 py-1 text-[10px] uppercase font-mono font-bold tracking-wider bg-rose-500/10 text-rose-400 border border-rose-500/20 rounded-lg">
-              Main Cellar
-            </span>
-            <i data-lucide="chevron-right" class="w-5 h-5 text-slate-500 group-hover:text-rose-400 group-hover:translate-x-1 transition"></i>
+    <!-- Cellars -->
+    <div class="space-y-3">
+      <h3 class="text-[11px] uppercase font-mono font-bold tracking-wider text-slate-400 dark:text-slate-500 px-1">Cellars</h3>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+        <a href="./M&S/" class="glass-card rounded-2xl p-6 flex flex-col justify-between group cursor-pointer shadow-xl">
+          <div class="space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="px-2.5 py-1 text-[10px] uppercase font-mono font-bold tracking-wider bg-rose-100 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-300 dark:border-rose-500/20 rounded-lg">
+                Main Cellar
+              </span>
+              <i data-lucide="chevron-right" class="w-5 h-5 text-slate-400 dark:text-slate-500 group-hover:text-rose-500 dark:group-hover:text-rose-400 group-hover:translate-x-1 transition"></i>
+            </div>
+            <div>
+              <h2 class="text-lg font-bold text-slate-900 dark:text-white group-hover:text-rose-600 dark:group-hover:text-rose-400 transition">Wine Cellar M&S</h2>
+              <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Primary collection management with Google Sheets database and Gemini AI scanner.</p>
+            </div>
           </div>
-          <div>
-            <h2 class="text-lg font-bold text-white group-hover:text-rose-400 transition">Wine Cellar M&S</h2>
-            <p class="text-xs text-slate-400 mt-1">Primary collection management with Google Sheets database and Gemini AI scanner.</p>
+
+          <div class="pt-6 mt-4 border-t border-slate-200 dark:border-slate-800/60 flex items-center justify-between text-xs text-slate-500">
+            <span class="flex items-center gap-1.5"><i data-lucide="database" class="w-3.5 h-3.5"></i> Google Sheets</span>
+            <span class="text-rose-600 dark:text-rose-400 font-medium group-hover:underline">Open App &rarr;</span>
+          </div>
+        </a>
+
+        <div class="glass-card rounded-2xl p-6 flex flex-col justify-between opacity-60 border-dashed">
+          <div class="space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="px-2.5 py-1 text-[10px] uppercase font-mono font-bold tracking-wider bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-300 dark:border-slate-700 rounded-lg">
+                Secondary / Future
+              </span>
+              <i data-lucide="lock" class="w-4 h-4 text-slate-400 dark:text-slate-500"></i>
+            </div>
+            <div>
+              <h2 class="text-lg font-bold text-slate-600 dark:text-slate-300">Alexandre Bougie</h2>
+              <p class="text-xs text-slate-400 dark:text-slate-500 mt-1">Slot reserved for Alexandre's collection or separate rack tracking.</p>
+            </div>
+          </div>
+
+          <div class="pt-6 mt-4 border-t border-slate-200 dark:border-slate-800/60 text-xs text-slate-400 dark:text-slate-600 italic">
+            Ready for future expansion
           </div>
         </div>
 
-        <div class="pt-6 mt-4 border-t border-slate-800/60 flex items-center justify-between text-xs text-slate-500">
-          <span class="flex items-center gap-1.5"><i data-lucide="database" class="w-3.5 h-3.5"></i> Google Sheets</span>
-          <span class="text-rose-400 font-medium group-hover:underline">Open App &rarr;</span>
-        </div>
-      </a>
-
-      <div class="glass-card rounded-2xl p-6 flex flex-col justify-between opacity-60 border-dashed">
-        <div class="space-y-3">
-          <div class="flex items-center justify-between">
-            <span class="px-2.5 py-1 text-[10px] uppercase font-mono font-bold tracking-wider bg-slate-800 text-slate-400 border border-slate-700 rounded-lg">
-              Secondary / Future
-            </span>
-            <i data-lucide="lock" class="w-4 h-4 text-slate-500"></i>
+        <div class="glass-card rounded-2xl p-6 flex flex-col justify-between opacity-60 border-dashed">
+          <div class="space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="px-2.5 py-1 text-[10px] uppercase font-mono font-bold tracking-wider bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-300 dark:border-slate-700 rounded-lg">
+                Secondary / Future
+              </span>
+              <i data-lucide="lock" class="w-4 h-4 text-slate-400 dark:text-slate-500"></i>
+            </div>
+            <div>
+              <h2 class="text-lg font-bold text-slate-600 dark:text-slate-300">Jean-Philippe Brisson</h2>
+              <p class="text-xs text-slate-400 dark:text-slate-500 mt-1">Slot reserved for Jean-Philippe's collection or separate rack tracking.</p>
+            </div>
           </div>
-          <div>
-            <h2 class="text-lg font-bold text-slate-300">New Cellar Location</h2>
-            <p class="text-xs text-slate-500 mt-1">Slot reserved for additional collections or separate rack tracking.</p>
+
+          <div class="pt-6 mt-4 border-t border-slate-200 dark:border-slate-800/60 text-xs text-slate-400 dark:text-slate-600 italic">
+            Ready for future expansion
           </div>
         </div>
 
-        <div class="pt-6 mt-4 border-t border-slate-800/60 text-xs text-slate-600 italic">
-          Ready for future expansion
-        </div>
       </div>
+    </div>
 
+    <!-- Other tools -->
+    <div class="space-y-3">
+      <h3 class="text-[11px] uppercase font-mono font-bold tracking-wider text-slate-400 dark:text-slate-500 px-1">Other tools</h3>
+
+      <a href="https://mom3ntum-mtl.github.io/WineCellar/littleSommelier/" class="glass-card rounded-2xl p-5 flex items-center justify-between group cursor-pointer shadow-xl">
+        <div class="flex items-center gap-4">
+          <div class="p-2.5 bg-indigo-100 dark:bg-indigo-950/80 border border-indigo-300 dark:border-indigo-500/30 rounded-2xl text-indigo-600 dark:text-indigo-400 shrink-0">
+            <i data-lucide="sparkles" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h2 class="text-base font-bold text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition">my little Sommelier app</h2>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Scan a label for an instant tasting profile, powered by Gemini.</p>
+          </div>
+        </div>
+        <i data-lucide="chevron-right" class="w-5 h-5 text-slate-400 dark:text-slate-500 group-hover:text-indigo-500 dark:group-hover:text-indigo-400 group-hover:translate-x-1 transition shrink-0"></i>
+      </a>
     </div>
 
   </main>
 
-  <footer class="border-t border-slate-800/80 py-4 text-center text-xs text-slate-500">
+  <footer class="border-t border-slate-200 dark:border-slate-800/80 py-4 text-center text-xs text-slate-500">
     <p>Cellar Management System • Powered by Google Apps Script</p>
   </footer>
 
