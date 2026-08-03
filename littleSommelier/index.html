@@ -47,9 +47,14 @@
           <p class="text-[10px] italic text-slate-400 dark:text-slate-500">by <span class="font-bold not-italic">mom3ntum</span></p>
         </div>
       </div>
-      <button onclick="toggleTheme()" class="flex items-center justify-center w-9 h-9 rounded-xl bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-700 transition">
-        <i data-lucide="sun-moon" class="w-4 h-4"></i>
-      </button>
+      <div class="flex items-center gap-2">
+        <button onclick="toggleLanguage()" id="languageToggleBtn" class="flex items-center justify-center w-9 h-9 rounded-xl bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-700 transition font-bold text-[11px]">
+          EN
+        </button>
+        <button onclick="toggleTheme()" class="flex items-center justify-center w-9 h-9 rounded-xl bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-700 transition">
+          <i data-lucide="sun-moon" class="w-4 h-4"></i>
+        </button>
+      </div>
     </header>
 
     <!-- Main -->
@@ -65,14 +70,14 @@
             <i data-lucide="camera" class="w-8 h-8"></i>
           </div>
           <div>
-            <p class="text-sm font-bold text-slate-700 dark:text-slate-200">Tap to SCAN a label</p>
-            <p class="text-xs text-slate-400 mt-1">my little Sommelier will find the wine for you</p>
+            <p class="text-sm font-bold text-slate-700 dark:text-slate-200" data-i18n="captureTitle">Tap to SCAN a label</p>
+            <p class="text-xs text-slate-400 mt-1" data-i18n="captureSubtitle">my little Sommelier will find the wine for you</p>
           </div>
         </div>
 
         <button onclick="showLastScannedWine()" id="lastScannedBtn" class="mt-5 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 font-bold text-xs transition hover:border-slate-400 dark:hover:border-slate-500 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:border-slate-200 dark:disabled:hover:border-slate-700">
           <i data-lucide="history" class="w-3.5 h-3.5"></i>
-          <span>Show last scanned wine</span>
+          <span data-i18n="showLastScanned">Show last scanned wine</span>
         </button>
       </div>
 
@@ -82,8 +87,8 @@
           <i data-lucide="sparkles" class="w-10 h-10"></i>
         </div>
         <div>
-          <p class="text-sm font-bold text-slate-700 dark:text-slate-200">Reading the label...</p>
-          <p class="text-xs text-slate-400 mt-1">Gemini is identifying the wine and building your tasting profile</p>
+          <p class="text-sm font-bold text-slate-700 dark:text-slate-200" data-i18n="loadingTitle">Reading the label...</p>
+          <p class="text-xs text-slate-400 mt-1" data-i18n="loadingSubtitle">Gemini is identifying the wine and building your tasting profile</p>
         </div>
       </div>
 
@@ -93,10 +98,10 @@
           <i data-lucide="alert-triangle" class="w-10 h-10"></i>
         </div>
         <div>
-          <p class="text-sm font-bold text-slate-700 dark:text-slate-200">Couldn't read that label</p>
+          <p class="text-sm font-bold text-slate-700 dark:text-slate-200" data-i18n="errorTitle">Couldn't read that label</p>
           <p id="errorMessage" class="text-xs text-slate-400 mt-1">Something went wrong.</p>
         </div>
-        <button onclick="resetToCapture()" class="px-5 py-2.5 bg-rose-600 hover:bg-rose-500 text-white rounded-xl font-medium text-sm transition">Try again</button>
+        <button onclick="resetToCapture()" class="px-5 py-2.5 bg-rose-600 hover:bg-rose-500 text-white rounded-xl font-medium text-sm transition" data-i18n="tryAgain">Try again</button>
       </div>
 
       <!-- SCREEN 4: Results -->
@@ -129,7 +134,7 @@
           <!-- Facts & Story -->
           <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm space-y-1.5">
             <span class="font-bold text-xs text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-              <i data-lucide="book-open" class="w-3.5 h-3.5 text-indigo-500"></i> Facts & Story
+              <i data-lucide="book-open" class="w-3.5 h-3.5 text-indigo-500"></i> <span data-i18n="factsTitle">Facts &amp; Story</span>
             </span>
             <p id="resultFacts" class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed"></p>
           </div>
@@ -137,7 +142,7 @@
           <!-- Quality Score -->
           <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm">
             <span class="font-bold text-xs text-slate-700 dark:text-slate-300 flex items-center gap-1.5 mb-3">
-              <i data-lucide="star" class="w-3.5 h-3.5 text-blue-500"></i> Quality Score
+              <i data-lucide="star" class="w-3.5 h-3.5 text-blue-500"></i> <span data-i18n="qualityScoreTitle">Quality Score</span>
             </span>
             <div class="flex items-center justify-between">
               <div id="resultQualityDots" class="flex items-center gap-1.5"></div>
@@ -148,20 +153,20 @@
           <!-- Tasting Profile -->
           <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm space-y-3">
             <span class="font-bold text-xs text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-              <i data-lucide="wine" class="w-3.5 h-3.5 text-rose-500"></i> Tasting Profile
+              <i data-lucide="wine" class="w-3.5 h-3.5 text-rose-500"></i> <span data-i18n="tastingProfileTitle">Tasting Profile</span>
             </span>
 
             <div class="space-y-2.5 text-xs">
               <div>
-                <p class="font-bold text-slate-500 dark:text-slate-400 text-[10px] uppercase tracking-wide mb-0.5">Nose</p>
+                <p class="font-bold text-slate-500 dark:text-slate-400 text-[10px] uppercase tracking-wide mb-0.5" data-i18n="noseLabel">Nose</p>
                 <p id="resultNose" class="text-slate-600 dark:text-slate-300 leading-relaxed"></p>
               </div>
               <div class="border-t border-slate-100 dark:border-slate-800 pt-2.5">
-                <p class="font-bold text-slate-500 dark:text-slate-400 text-[10px] uppercase tracking-wide mb-0.5">Palate</p>
+                <p class="font-bold text-slate-500 dark:text-slate-400 text-[10px] uppercase tracking-wide mb-0.5" data-i18n="palateLabel">Palate</p>
                 <p id="resultPalate" class="text-slate-600 dark:text-slate-300 leading-relaxed"></p>
               </div>
               <div class="border-t border-slate-100 dark:border-slate-800 pt-2.5">
-                <p class="font-bold text-slate-500 dark:text-slate-400 text-[10px] uppercase tracking-wide mb-0.5">Flavours</p>
+                <p class="font-bold text-slate-500 dark:text-slate-400 text-[10px] uppercase tracking-wide mb-0.5" data-i18n="flavoursLabel">Flavours</p>
                 <p id="resultFlavours" class="text-slate-600 dark:text-slate-300 leading-relaxed"></p>
               </div>
             </div>
@@ -172,11 +177,11 @@
             <div class="grid grid-cols-2 gap-2">
               <button onclick="selectBottleSize('750')" id="sizeBtn750" class="format-btn flex items-center justify-center gap-2 py-2.5 rounded-xl border-2 transition">
                 <i data-lucide="wine" class="w-4 h-4"></i>
-                <span class="text-xs font-bold">Regular (750 mL)</span>
+                <span class="text-xs font-bold" data-i18n="sizeRegular">Regular (750 mL)</span>
               </button>
               <button onclick="selectBottleSize('1500')" id="sizeBtn1500" class="format-btn flex items-center justify-center gap-2 py-2.5 rounded-xl border-2 transition">
                 <i data-lucide="wine" class="w-5 h-5"></i>
-                <span class="text-xs font-bold">Magnum (1.5 L)</span>
+                <span class="text-xs font-bold" data-i18n="sizeMagnum">Magnum (1.5 L)</span>
               </button>
             </div>
           </div>
@@ -185,13 +190,13 @@
           <div id="valuationSection" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm">
             <button id="valuationBtn" onclick="fetchValuation()" class="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-emerald-400 hover:bg-emerald-500 text-white font-bold text-xs transition shadow-sm">
               <i data-lucide="tag" class="w-3.5 h-3.5"></i>
-              <span>Generate MARKET VALUE &amp; DRINKING WINDOW for this wine</span>
+              <span data-i18n="generateValuationBtn">Generate Market Value &amp; Drinking Window</span>
             </button>
 
             <div id="valuationResults" class="hidden grid grid-cols-2 gap-4 pt-1">
               <div>
                 <span class="font-bold text-xs text-slate-700 dark:text-slate-300 flex items-center gap-1.5 mb-2">
-                  <i data-lucide="tag" class="w-3.5 h-3.5 text-emerald-500"></i> Market Value
+                  <i data-lucide="tag" class="w-3.5 h-3.5 text-emerald-500"></i> <span data-i18n="marketValueTitle">Market Value</span>
                 </span>
                 <div class="flex items-baseline gap-1.5">
                   <span id="resultMarketValue" class="text-xl font-extrabold text-emerald-600 dark:text-emerald-400"></span>
@@ -201,7 +206,7 @@
               </div>
               <div class="border-l border-slate-100 dark:border-slate-800 pl-4">
                 <span class="font-bold text-xs text-slate-700 dark:text-slate-300 flex items-center gap-1.5 mb-2">
-                  <i data-lucide="calendar-clock" class="w-3.5 h-3.5 text-indigo-500"></i> Drinking Window
+                  <i data-lucide="calendar-clock" class="w-3.5 h-3.5 text-indigo-500"></i> <span data-i18n="drinkingWindowTitle">Drinking Window</span>
                 </span>
                 <div class="flex items-baseline gap-1">
                   <span id="resultDrinkingWindow" class="text-xl font-extrabold text-indigo-600 dark:text-indigo-400"></span>
@@ -214,13 +219,13 @@
           <!-- Exam note button -->
           <button id="examNoteBtn" onclick="generateExamNote()" class="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-sky-400 hover:bg-sky-500 text-white font-bold text-xs transition shadow-sm">
             <i data-lucide="graduation-cap" class="w-3.5 h-3.5"></i>
-            <span>Get a full WSET Level 3 tasting note</span>
+            <span data-i18n="examNoteBtnLabel">Get a full WSET Level 3 tasting note</span>
           </button>
 
           <!-- Exam note result -->
           <div id="examNoteCard" class="hidden bg-white dark:bg-slate-900 border border-indigo-200 dark:border-indigo-900 rounded-2xl p-4 shadow-sm space-y-2 fade-in">
             <span class="font-bold text-xs text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-              <i data-lucide="graduation-cap" class="w-3.5 h-3.5 text-indigo-500"></i> WSET Level 3 Tasting Note
+              <i data-lucide="graduation-cap" class="w-3.5 h-3.5 text-indigo-500"></i> <span data-i18n="examNoteCardTitle">WSET Level 3 Tasting Note</span>
             </span>
             <div id="examNoteText" class="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed"></div>
           </div>
@@ -232,7 +237,7 @@
 
             <button onclick="scanAnotherDirect()" class="py-3 border-2 border-dashed border-indigo-400/40 hover:border-indigo-500 bg-indigo-50/50 dark:bg-indigo-950/20 text-slate-700 dark:text-slate-200 rounded-2xl font-bold text-xs transition flex items-center justify-center gap-2">
               <i data-lucide="camera" class="w-4 h-4"></i>
-              <span>Scan another bottle</span>
+              <span data-i18n="scanAnotherBtn">Scan another bottle</span>
             </button>
 
             <button onclick="navigateHistory(-1)" id="historyNextBtn" title="Next wine" class="px-3.5 flex items-center justify-center rounded-2xl border-2 border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 hover:border-slate-400 dark:hover:border-slate-500 transition disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:border-slate-200 dark:disabled:hover:border-slate-700">
@@ -256,6 +261,146 @@
 
   let currentWineData = null; // holds the currently displayed wine's data (may be a fresh scan or a history entry)
   let selectedBottleSize = "750"; // toggled above the action buttons, feeds valuation + exam note requests
+
+  // =========================================================================
+  // LANGUAGE — English by default. Only the UI chrome and Gemini's free-text
+  // prose are translated; JSON keys and enum values from Gemini stay in
+  // English internally and are mapped to display text via the dictionaries
+  // below, so the app's data model never has to branch on language.
+  // =========================================================================
+  let currentLanguage = "en";
+
+  const TRANSLATIONS = {
+    en: {
+      captureTitle: "Tap to SCAN a label",
+      captureSubtitle: "my little Sommelier will find the wine for you",
+      showLastScanned: "Show last scanned wine",
+      loadingTitle: "Reading the label...",
+      loadingSubtitle: "Gemini is identifying the wine and building your tasting profile",
+      errorTitle: "Couldn't read that label",
+      tryAgain: "Try again",
+      factsTitle: "Facts & Story",
+      qualityScoreTitle: "Quality Score",
+      tastingProfileTitle: "Tasting Profile",
+      noseLabel: "Nose",
+      palateLabel: "Palate",
+      flavoursLabel: "Flavours",
+      sizeRegular: "Regular (750 mL)",
+      sizeMagnum: "Magnum (1.5 L)",
+      generateValuationBtn: "Generate Market Value & Drinking Window",
+      marketValueTitle: "Market Value",
+      drinkingWindowTitle: "Drinking Window",
+      examNoteBtnLabel: "Get a full WSET Level 3 tasting note",
+      examNoteCardTitle: "WSET Level 3 Tasting Note",
+      scanAnotherBtn: "Scan another bottle",
+      previousWineTitle: "Previous wine",
+      nextWineTitle: "Next wine",
+      historyPosition: (i, n) => `${i} of ${n}`,
+      valuationLoading: "Checking value & drinking window...",
+      examNoteLoading: "Writing tasting note...",
+      examNoteReady: "WSET tasting note ready below",
+      genericError: "Unknown error",
+      couldNotAnalyze: "Gemini could not analyze this label.",
+      photoErrorGeneric: "Something went wrong reading the photo. Please try again.",
+      valuationErrorAlert: (reason) => `Gemini could not fetch a valuation.\n\nReason: ${reason}`,
+      examNoteErrorAlert: (reason) => `Gemini could not generate the exam note.\n\nReason: ${reason}`
+    },
+    fr: {
+      captureTitle: "Touchez pour SCANNER une étiquette",
+      captureSubtitle: "my little Sommelier trouve le vin pour vous",
+      showLastScanned: "Afficher le dernier vin scanné",
+      loadingTitle: "Lecture de l'étiquette...",
+      loadingSubtitle: "Gemini identifie le vin et construit votre profil de dégustation",
+      errorTitle: "Impossible de lire cette étiquette",
+      tryAgain: "Réessayer",
+      factsTitle: "Faits & Histoire",
+      qualityScoreTitle: "Score de qualité",
+      tastingProfileTitle: "Profil de dégustation",
+      noseLabel: "Nez",
+      palateLabel: "Bouche",
+      flavoursLabel: "Saveurs",
+      sizeRegular: "Régulière (750 mL)",
+      sizeMagnum: "Magnum (1,5 L)",
+      generateValuationBtn: "Générer la valeur marchande et la fenêtre de dégustation",
+      marketValueTitle: "Valeur marchande",
+      drinkingWindowTitle: "Fenêtre de dégustation",
+      examNoteBtnLabel: "Obtenir une note de dégustation complète WSET niveau 3",
+      examNoteCardTitle: "Note de dégustation WSET niveau 3",
+      scanAnotherBtn: "Scanner une autre bouteille",
+      previousWineTitle: "Vin précédent",
+      nextWineTitle: "Vin suivant",
+      historyPosition: (i, n) => `${i} sur ${n}`,
+      valuationLoading: "Vérification de la valeur et de la fenêtre de dégustation...",
+      examNoteLoading: "Rédaction de la note de dégustation...",
+      examNoteReady: "Note de dégustation WSET prête ci-dessous",
+      genericError: "Erreur inconnue",
+      couldNotAnalyze: "Gemini n'a pas pu analyser cette étiquette.",
+      photoErrorGeneric: "Une erreur s'est produite lors de la lecture de la photo. Veuillez réessayer.",
+      valuationErrorAlert: (reason) => `Gemini n'a pas pu obtenir d'estimation.\n\nRaison : ${reason}`,
+      examNoteErrorAlert: (reason) => `Gemini n'a pas pu générer la note de dégustation.\n\nRaison : ${reason}`
+    }
+  };
+
+  // Display-only maps for Gemini's fixed English enum values — the underlying
+  // data stays in English; only what's shown on screen changes with language.
+  const CATEGORY_DISPLAY = {
+    en: { "Red Wine": "Red Wine", "White Wine": "White Wine", "Sparkling Wine": "Sparkling Wine", "Rosé Wine": "Rosé Wine", "Orange Wine": "Orange Wine", "Dessert Wine": "Dessert Wine", "Fortified Wine": "Fortified Wine" },
+    fr: { "Red Wine": "Vin rouge", "White Wine": "Vin blanc", "Sparkling Wine": "Vin mousseux", "Rosé Wine": "Vin rosé", "Orange Wine": "Vin orange", "Dessert Wine": "Vin de dessert", "Fortified Wine": "Vin fortifié" }
+  };
+  const CERTIFICATION_DISPLAY = {
+    en: { "Organic": "Organic", "Biodynamic": "Biodynamic", "Natural": "Natural" },
+    fr: { "Organic": "Biologique", "Biodynamic": "Biodynamique", "Natural": "Nature" }
+  };
+  const QUALITY_LABEL_DISPLAY = {
+    en: { "Poor": "Poor", "Acceptable": "Acceptable", "Good": "Good", "Very Good": "Very Good", "Exceptional": "Exceptional" },
+    fr: { "Poor": "Faible", "Acceptable": "Acceptable", "Good": "Bon", "Very Good": "Très bon", "Exceptional": "Exceptionnel" }
+  };
+  const QUALITY_LABELS_BY_SCORE = { 1: "Poor", 2: "Acceptable", 3: "Good", 4: "Very Good", 5: "Exceptional" };
+
+  function t(key, ...args) {
+    const entry = TRANSLATIONS[currentLanguage][key];
+    return typeof entry === 'function' ? entry(...args) : entry;
+  }
+
+  // Applies the current language to every static element tagged with data-i18n
+  function applyTranslations() {
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+      const key = el.getAttribute('data-i18n');
+      const translated = TRANSLATIONS[currentLanguage][key];
+      if (typeof translated === 'string') el.innerHTML = translated;
+    });
+
+    document.getElementById('languageToggleBtn').innerText = currentLanguage === 'en' ? 'EN' : 'FR';
+    document.getElementById('historyPrevBtn').title = t('previousWineTitle');
+    document.getElementById('historyNextBtn').title = t('nextWineTitle');
+
+    // Reset buttons that have dynamic (loading/success) states back to their static label
+    resetValuationButton();
+    const examBtn = document.getElementById('examNoteBtn');
+    if (examBtn && !currentWineData?.examNote) {
+      examBtn.innerHTML = `<i data-lucide="graduation-cap" class="w-3.5 h-3.5"></i><span>${t('examNoteBtnLabel')}</span>`;
+    }
+
+    lucide.createIcons();
+  }
+
+  function toggleLanguage() {
+    currentLanguage = currentLanguage === 'en' ? 'fr' : 'en';
+    try { localStorage.setItem('sommelier-language', currentLanguage); } catch (e) { /* ignore */ }
+    applyTranslations();
+
+    // If a wine is currently displayed, re-render it so category/certification/quality
+    // labels (and any restored valuation/exam note) reflect the new language too
+    if (currentWineData) {
+      renderResults(currentWineData);
+    }
+  }
+
+  (function initLanguage() {
+    let saved = null;
+    try { saved = localStorage.getItem('sommelier-language'); } catch (e) { /* ignore */ }
+    currentLanguage = (saved === 'fr') ? 'fr' : 'en'; // English remains the default
+  })();
 
   // ---- Theme (only thing kept in localStorage — a UI preference, not wine data) ----
   function applyTheme(isDark) {
@@ -371,7 +516,7 @@
     nextBtn.disabled = (history.length === 0) || (historyIndex <= 0);
 
     if (history.length > 0) {
-      label.innerText = `${historyIndex + 1} of ${history.length}`;
+      label.innerText = t('historyPosition', historyIndex + 1, history.length);
       label.classList.remove('hidden');
     } else {
       label.classList.add('hidden');
@@ -384,7 +529,7 @@
     document.getElementById('examNoteText').innerHTML = '';
     const examBtn = document.getElementById('examNoteBtn');
     examBtn.disabled = false;
-    examBtn.innerHTML = `<i data-lucide="graduation-cap" class="w-3.5 h-3.5"></i><span>Get a full WSET Level 3 tasting note</span>`;
+    examBtn.innerHTML = `<i data-lucide="graduation-cap" class="w-3.5 h-3.5"></i><span>${t('examNoteBtnLabel')}</span>`;
     document.getElementById('valuationResults').classList.add('hidden');
     document.getElementById('valuationBtn').classList.remove('hidden');
     resetValuationButton();
@@ -418,7 +563,8 @@
 
       const result = await callApi("ANALYZE_WINE", {
         imageBase64: base64Data,
-        imageMimeType: file.type || "image/jpeg"
+        imageMimeType: file.type || "image/jpeg",
+        language: currentLanguage
       });
 
       if (result && result.status === "success" && result.data) {
@@ -428,11 +574,11 @@
         updateHistoryNavButtons();
         showScreen('resultsScreen');
       } else {
-        showError((result && result.message) ? result.message : "Gemini could not analyze this label.");
+        showError((result && result.message) ? result.message : t('couldNotAnalyze'));
       }
     } catch (err) {
       console.error(err);
-      showError("Something went wrong reading the photo. Please try again.");
+      showError(t('photoErrorGeneric'));
     } finally {
       lucide.createIcons();
     }
@@ -455,7 +601,8 @@
 
   function getCategoryBadge(category) {
     const styles = CATEGORY_STYLES[category] || "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300 border-slate-200 dark:border-slate-700";
-    return `<span class="px-2 py-0.5 text-[10px] rounded-md font-medium border ${styles}">${category || 'Wine'}</span>`;
+    const displayText = (CATEGORY_DISPLAY[currentLanguage] && CATEGORY_DISPLAY[currentLanguage][category]) || category || 'Wine';
+    return `<span class="px-2 py-0.5 text-[10px] rounded-md font-medium border ${styles}">${displayText}</span>`;
   }
 
   const CERTIFICATION_CONFIG = {
@@ -470,14 +617,13 @@
       .filter(c => CERTIFICATION_CONFIG[c])
       .map(c => {
         const cfg = CERTIFICATION_CONFIG[c];
+        const displayText = (CERTIFICATION_DISPLAY[currentLanguage] && CERTIFICATION_DISPLAY[currentLanguage][c]) || c;
         return `<span class="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] rounded-md font-medium border ${cfg.classes}">
-          <i data-lucide="${cfg.icon}" class="w-2.5 h-2.5"></i> ${c}
+          <i data-lucide="${cfg.icon}" class="w-2.5 h-2.5"></i> ${displayText}
         </span>`;
       })
       .join('');
   }
-
-  const QUALITY_LABELS = { 1: "Poor", 2: "Acceptable", 3: "Good", 4: "Very Good", 5: "Exceptional" };
 
   function renderQualityScore(score) {
     const dotsContainer = document.getElementById('resultQualityDots');
@@ -490,7 +636,8 @@
       dotsHtml += `<span class="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold border-2 transition ${isTheScore ? 'bg-blue-600 border-blue-600 text-white' : 'bg-transparent border-slate-200 dark:border-slate-700 text-slate-300 dark:text-slate-600'}">${i}</span>`;
     }
     dotsContainer.innerHTML = dotsHtml;
-    labelEl.innerText = QUALITY_LABELS[clamped] || '';
+    const englishLabel = QUALITY_LABELS_BY_SCORE[clamped] || '';
+    labelEl.innerText = (QUALITY_LABEL_DISPLAY[currentLanguage] && QUALITY_LABEL_DISPLAY[currentLanguage][englishLabel]) || englishLabel;
   }
 
   function renderResults(w) {
@@ -563,7 +710,7 @@
     const btn = document.getElementById('valuationBtn');
     btn.disabled = false;
     btn.classList.remove('hidden');
-    btn.innerHTML = `<i data-lucide="tag" class="w-3.5 h-3.5"></i><span>Generate MARKET VALUE &amp; DRINKING WINDOW for this wine</span>`;
+    btn.innerHTML = `<i data-lucide="tag" class="w-3.5 h-3.5"></i><span>${t('generateValuationBtn')}</span>`;
     lucide.createIcons();
   }
 
@@ -593,11 +740,11 @@
     const btn = document.getElementById('valuationBtn');
 
     btn.disabled = true;
-    btn.innerHTML = `<i data-lucide="loader" class="w-3.5 h-3.5 animate-spin"></i><span>Checking value &amp; drinking window...</span>`;
+    btn.innerHTML = `<i data-lucide="loader" class="w-3.5 h-3.5 animate-spin"></i><span>${t('valuationLoading')}</span>`;
     lucide.createIcons();
 
     try {
-      const result = await callApi("GET_VALUATION", { identity: currentWineData.identity, format: selectedBottleSize });
+      const result = await callApi("GET_VALUATION", { identity: currentWineData.identity, format: selectedBottleSize, language: currentLanguage });
 
       if (result && result.status === "success" && result.data) {
         const mv = result.data.marketValue || {};
@@ -617,8 +764,8 @@
         document.getElementById('valuationResults').classList.remove('hidden');
         btn.classList.add('hidden');
       } else {
-        const reason = (result && result.message) ? result.message : "Unknown error";
-        alert(`Gemini could not fetch a valuation.\n\nReason: ${reason}`);
+        const reason = (result && result.message) ? result.message : t('genericError');
+        alert(t('valuationErrorAlert', reason));
         resetValuationButton();
       }
     } catch (err) {
@@ -635,11 +782,11 @@
     const btn = document.getElementById('examNoteBtn');
     const originalHtml = btn.innerHTML;
     btn.disabled = true;
-    btn.innerHTML = `<i data-lucide="loader" class="w-3.5 h-3.5 animate-spin"></i><span>Writing tasting note...</span>`;
+    btn.innerHTML = `<i data-lucide="loader" class="w-3.5 h-3.5 animate-spin"></i><span>${t('examNoteLoading')}</span>`;
     lucide.createIcons();
 
     try {
-      const result = await callApi("GENERATE_EXAM_NOTE", { identity: currentWineData.identity });
+      const result = await callApi("GENERATE_EXAM_NOTE", { identity: currentWineData.identity, language: currentLanguage });
 
       if (result && result.status === "success" && result.note) {
         const escaped = String(result.note)
@@ -649,14 +796,15 @@
         const bolded = escaped.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>").replace(/\n/g, "<br>");
         document.getElementById('examNoteText').innerHTML = bolded;
         document.getElementById('examNoteCard').classList.remove('hidden');
-        btn.innerHTML = `<i data-lucide="check" class="w-3.5 h-3.5"></i><span>WSET tasting note ready below</span>`;
+        btn.innerHTML = `<i data-lucide="check" class="w-3.5 h-3.5"></i><span>${t('examNoteReady')}</span>`;
 
         // Save onto the current wine record so it's preserved in history
         currentWineData.examNote = result.note;
+        currentWineData.examNoteLanguage = currentLanguage;
         saveCurrentWineToHistory();
       } else {
-        const reason = (result && result.message) ? result.message : "Unknown error";
-        alert(`Gemini could not generate the exam note.\n\nReason: ${reason}`);
+        const reason = (result && result.message) ? result.message : t('genericError');
+        alert(t('examNoteErrorAlert', reason));
         btn.innerHTML = originalHtml;
         btn.disabled = false;
       }
