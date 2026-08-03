@@ -30,6 +30,13 @@
     from { opacity: 0; transform: translateY(8px); }
     to { opacity: 1; transform: translateY(0); }
   }
+  .scan-line { animation: scan-line-move 1.8s ease-in-out infinite; }
+  @keyframes scan-line-move {
+    0% { top: 4%; opacity: 0; }
+    15% { opacity: 1; }
+    85% { opacity: 1; }
+    100% { top: 94%; opacity: 0; }
+  }
 </style>
 </head>
 <body class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 min-h-screen transition-colors">
@@ -83,8 +90,12 @@
 
       <!-- SCREEN 2: Loading -->
       <div id="loadingScreen" class="hidden flex-1 flex flex-col items-center justify-center gap-4 text-center px-8">
-        <div class="scan-pulse p-5 bg-rose-100 dark:bg-rose-950/80 rounded-3xl text-rose-600 dark:text-rose-500">
-          <i data-lucide="sparkles" class="w-10 h-10"></i>
+        <div class="relative w-36 h-36 rounded-3xl overflow-hidden bg-rose-100 dark:bg-rose-950/80 border border-rose-200 dark:border-rose-900/60 shadow-sm">
+          <img id="loadingThumb" alt="" class="hidden w-full h-full object-cover">
+          <div id="loadingThumbFallback" class="scan-pulse w-full h-full flex items-center justify-center text-rose-600 dark:text-rose-500">
+            <i data-lucide="sparkles" class="w-10 h-10"></i>
+          </div>
+          <div class="scan-line absolute left-0 right-0 h-0.5 bg-rose-500/80 shadow-[0_0_8px_2px_rgba(244,63,94,0.6)]"></div>
         </div>
         <div>
           <p class="text-sm font-bold text-slate-700 dark:text-slate-200" data-i18n="loadingTitle">Reading the label...</p>
@@ -251,6 +262,12 @@
       </div>
 
     </main>
+
+    <!-- Toast — non-blocking error notices (replaces alert()) -->
+    <div id="toast" onclick="hideToast()" class="hidden fixed left-1/2 -translate-x-1/2 bottom-6 z-50 max-w-[85vw] flex items-start gap-2 bg-amber-600 text-white text-xs font-medium leading-snug px-4 py-3 rounded-xl shadow-lg fade-in cursor-pointer">
+      <i data-lucide="alert-triangle" class="w-3.5 h-3.5 shrink-0 mt-0.5"></i>
+      <span id="toastMessage"></span>
+    </div>
   </div>
 
 <script>
@@ -261,6 +278,9 @@
 
   let currentWineData = null; // holds the currently displayed wine's data (may be a fresh scan or a history entry)
   let selectedBottleSize = "750"; // toggled above the action buttons, feeds valuation + exam note requests
+  let isProcessingImage = false; // guards against a double-fire while a scan is already in flight
+  let loadingThumbUrl = null; // object URL for the loading-screen photo preview, revoked once no longer needed
+  let toastTimer = null;
 
   // =========================================================================
   // LANGUAGE — English by default. Only the UI chrome and Gemini's free-text
@@ -303,7 +323,11 @@
       couldNotAnalyze: "Gemini could not analyze this label.",
       photoErrorGeneric: "Something went wrong reading the photo. Please try again.",
       valuationErrorAlert: (reason) => `Gemini could not fetch a valuation.\n\nReason: ${reason}`,
-      examNoteErrorAlert: (reason) => `Gemini could not generate the exam note.\n\nReason: ${reason}`
+      examNoteErrorAlert: (reason) => `Gemini could not generate the exam note.\n\nReason: ${reason}`,
+      unknownProducer: "Unknown Producer",
+      vintageNV: "NV",
+      abvSuffix: (v) => `${v}% ABV`,
+      rsSuffix: (v) => `${v} g/L RS`
     },
     fr: {
       captureTitle: "Touchez pour SCANNER une étiquette",
@@ -337,7 +361,11 @@
       couldNotAnalyze: "Gemini n'a pas pu analyser cette étiquette.",
       photoErrorGeneric: "Une erreur s'est produite lors de la lecture de la photo. Veuillez réessayer.",
       valuationErrorAlert: (reason) => `Gemini n'a pas pu obtenir d'estimation.\n\nRaison : ${reason}`,
-      examNoteErrorAlert: (reason) => `Gemini n'a pas pu générer la note de dégustation.\n\nRaison : ${reason}`
+      examNoteErrorAlert: (reason) => `Gemini n'a pas pu générer la note de dégustation.\n\nRaison : ${reason}`,
+      unknownProducer: "Producteur inconnu",
+      vintageNV: "SM",
+      abvSuffix: (v) => `${v}% vol.`,
+      rsSuffix: (v) => `${v} g/L de sucre`
     }
   };
 
@@ -423,6 +451,19 @@
     ['captureScreen', 'loadingScreen', 'errorScreen', 'resultsScreen'].forEach(id => {
       document.getElementById(id).classList.toggle('hidden', id !== name);
     });
+  }
+
+  // ---- Toast (non-blocking error notices, used instead of alert()) ----
+  function showToast(message) {
+    document.getElementById('toastMessage').innerText = message;
+    document.getElementById('toast').classList.remove('hidden');
+    lucide.createIcons();
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(hideToast, 4500);
+  }
+  function hideToast() {
+    document.getElementById('toast').classList.add('hidden');
+    clearTimeout(toastTimer);
   }
 
   // =========================================================================
@@ -535,6 +576,7 @@
     resetValuationButton();
     updateCaptureScreenButtonState();
     document.getElementById('labelCameraInput').value = '';
+    setLoadingThumb(null);
     showScreen('captureScreen');
     lucide.createIcons();
   }
@@ -547,23 +589,78 @@
   }
 
   // ---- Capture & analyze ----
+
+  // Downscales/recompresses the captured photo before upload. Camera photos are often
+  // 3000px+ on a side (several MB) — sending that whole thing as base64 is the single
+  // biggest lever on scan speed: it inflates the upload, the Apps Script relay's payload
+  // to Gemini, and Gemini's own image-tokenization time. A label just needs to be legible,
+  // not print-resolution, so this trims to a sane max edge + JPEG quality before anything
+  // is read into base64. If anything goes wrong, it silently falls back to the original
+  // file rather than ever blocking a scan.
+  async function resizeImageForUpload(file, maxDimension = 1600, quality = 0.85) {
+    try {
+      const bitmap = await createImageBitmap(file, { imageOrientation: 'from-image' });
+      const scale = Math.min(1, maxDimension / Math.max(bitmap.width, bitmap.height));
+      const targetW = Math.max(1, Math.round(bitmap.width * scale));
+      const targetH = Math.max(1, Math.round(bitmap.height * scale));
+
+      const canvas = document.createElement('canvas');
+      canvas.width = targetW;
+      canvas.height = targetH;
+      canvas.getContext('2d').drawImage(bitmap, 0, 0, targetW, targetH);
+      if (bitmap.close) bitmap.close();
+
+      const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', quality));
+      return blob || file;
+    } catch (e) {
+      console.error('Image resize failed, uploading original photo instead:', e);
+      return file;
+    }
+  }
+
+  // Shows the photo being analyzed behind the scan-line animation on the loading screen —
+  // mostly reassurance that the right bottle was captured, not just a generic spinner.
+  function setLoadingThumb(blob) {
+    const img = document.getElementById('loadingThumb');
+    const fallback = document.getElementById('loadingThumbFallback');
+    if (loadingThumbUrl) {
+      URL.revokeObjectURL(loadingThumbUrl);
+      loadingThumbUrl = null;
+    }
+    if (!blob) {
+      img.classList.add('hidden');
+      img.removeAttribute('src');
+      fallback.classList.remove('hidden');
+      return;
+    }
+    loadingThumbUrl = URL.createObjectURL(blob);
+    img.src = loadingThumbUrl;
+    img.classList.remove('hidden');
+    fallback.classList.add('hidden');
+  }
+
   async function handleImageSelected(event) {
     const file = event.target.files[0];
     if (!file) return;
+    if (isProcessingImage) return; // guard against a double-fire while a scan is already in flight
+    isProcessingImage = true;
 
     showScreen('loadingScreen');
 
     try {
+      const resizedBlob = await resizeImageForUpload(file);
+      setLoadingThumb(resizedBlob);
+
       const base64Data = await new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = () => resolve(reader.result.split(',')[1]);
         reader.onerror = reject;
-        reader.readAsDataURL(file);
+        reader.readAsDataURL(resizedBlob);
       });
 
       const result = await callApi("ANALYZE_WINE", {
         imageBase64: base64Data,
-        imageMimeType: file.type || "image/jpeg",
+        imageMimeType: resizedBlob.type || file.type || "image/jpeg",
         language: currentLanguage
       });
 
@@ -580,6 +677,7 @@
       console.error(err);
       showError(t('photoErrorGeneric'));
     } finally {
+      isProcessingImage = false;
       lucide.createIcons();
     }
   }
@@ -642,18 +740,18 @@
 
   function renderResults(w) {
     const id = w.identity || {};
-    document.getElementById('resultProducer').innerText = id.producer || 'Unknown Producer';
+    document.getElementById('resultProducer').innerText = id.producer || t('unknownProducer');
     document.getElementById('resultAppellation').innerText = id.appellation || '—';
-    document.getElementById('resultVintage').innerText = id.vintage || 'NV';
+    document.getElementById('resultVintage').innerText = id.vintage || t('vintageNV');
     document.getElementById('resultCategoryBadge').innerHTML = getCategoryBadge(id.category);
     document.getElementById('resultRegionBadge').innerText = [id.region, id.country].filter(Boolean).join(', ') || '—';
     document.getElementById('resultCertBadges').innerHTML = getCertificationBadges(id.certifications);
 
     const abvCapsule = document.getElementById('resultAbvCapsule');
     const rsCapsule = document.getElementById('resultRsCapsule');
-    abvCapsule.innerText = id.abv ? `${id.abv}% ABV` : '';
+    abvCapsule.innerText = id.abv ? t('abvSuffix', id.abv) : '';
     abvCapsule.classList.toggle('hidden', !id.abv);
-    rsCapsule.innerText = id.residualSugar ? `${id.residualSugar} g/L RS` : '';
+    rsCapsule.innerText = id.residualSugar ? t('rsSuffix', id.residualSugar) : '';
     rsCapsule.classList.toggle('hidden', !id.residualSugar);
 
     document.getElementById('resultFacts').innerText = w.facts || '—';
@@ -695,12 +793,12 @@
       const bolded = escaped.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>").replace(/\n/g, "<br>");
       document.getElementById('examNoteText').innerHTML = bolded;
       document.getElementById('examNoteCard').classList.remove('hidden');
-      examBtn.innerHTML = `<i data-lucide="check" class="w-3.5 h-3.5"></i><span>WSET tasting note ready below</span>`;
+      examBtn.innerHTML = `<i data-lucide="check" class="w-3.5 h-3.5"></i><span>${t('examNoteReady')}</span>`;
     } else {
       document.getElementById('examNoteCard').classList.add('hidden');
       document.getElementById('examNoteText').innerHTML = '';
       examBtn.disabled = false;
-      examBtn.innerHTML = `<i data-lucide="graduation-cap" class="w-3.5 h-3.5"></i><span>Get a full WSET Level 3 tasting note</span>`;
+      examBtn.innerHTML = `<i data-lucide="graduation-cap" class="w-3.5 h-3.5"></i><span>${t('examNoteBtnLabel')}</span>`;
     }
 
     lucide.createIcons();
@@ -765,7 +863,7 @@
         btn.classList.add('hidden');
       } else {
         const reason = (result && result.message) ? result.message : t('genericError');
-        alert(t('valuationErrorAlert', reason));
+        showToast(t('valuationErrorAlert', reason));
         resetValuationButton();
       }
     } catch (err) {
@@ -804,7 +902,7 @@
         saveCurrentWineToHistory();
       } else {
         const reason = (result && result.message) ? result.message : t('genericError');
-        alert(t('examNoteErrorAlert', reason));
+        showToast(t('examNoteErrorAlert', reason));
         btn.innerHTML = originalHtml;
         btn.disabled = false;
       }
@@ -830,7 +928,7 @@
   selectBottleSize('750'); // reflect the default toggle state visually on load
   updateCaptureScreenButtonState();
   updateHistoryNavButtons();
-  lucide.createIcons();
+  applyTranslations(); // renders any saved language preference on load (also calls lucide.createIcons())
 </script>
 </body>
 </html>
