@@ -203,7 +203,7 @@
           <!-- Exam note result -->
           <div id="examNoteCard" class="hidden bg-white dark:bg-slate-900 border border-indigo-200 dark:border-indigo-900 rounded-2xl p-4 shadow-sm space-y-2 fade-in">
             <span class="font-bold text-xs text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-              <i data-lucide="graduation-cap" class="w-3.5 h-3.5 text-indigo-500"></i> WSET Level 3 Exam Note
+              <i data-lucide="graduation-cap" class="w-3.5 h-3.5 text-indigo-500"></i> WSET Level 3 Tasting Note
             </span>
             <div id="examNoteText" class="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed"></div>
           </div>
@@ -415,7 +415,7 @@
         const bolded = escaped.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>").replace(/\n/g, "<br>");
         document.getElementById('examNoteText').innerHTML = bolded;
         document.getElementById('examNoteCard').classList.remove('hidden');
-        btn.innerHTML = `<i data-lucide="check" class="w-4 h-4"></i><span>Exam note ready below</span>`;
+        btn.innerHTML = `<i data-lucide="check" class="w-4 h-4"></i><span>WSET tasting note ready below</span>`;
       } else {
         const reason = (result && result.message) ? result.message : "Unknown error";
         alert(`Gemini could not generate the exam note.\n\nReason: ${reason}`);
