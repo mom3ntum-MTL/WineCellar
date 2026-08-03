@@ -65,10 +65,15 @@
             <i data-lucide="camera" class="w-8 h-8"></i>
           </div>
           <div>
-            <p class="text-sm font-bold text-slate-700 dark:text-slate-200">Tap to photograph a label</p>
-            <p class="text-xs text-slate-400 mt-1">Gemini will identify the wine and build a full tasting profile</p>
+            <p class="text-sm font-bold text-slate-700 dark:text-slate-200">Tap to SCAN a label</p>
+            <p class="text-xs text-slate-400 mt-1">my little Sommelier will find the wine for you</p>
           </div>
         </div>
+
+        <button onclick="showLastScannedWine()" id="lastScannedBtn" class="mt-5 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 font-bold text-xs transition hover:border-slate-400 dark:hover:border-slate-500 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:border-slate-200 dark:disabled:hover:border-slate-700">
+          <i data-lucide="history" class="w-3.5 h-3.5"></i>
+          <span>Show last scanned wine</span>
+        </button>
       </div>
 
       <!-- SCREEN 2: Loading -->
@@ -220,27 +225,22 @@
             <div id="examNoteText" class="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed"></div>
           </div>
 
-          <div class="grid grid-cols-2 gap-3">
+          <div class="grid grid-cols-[auto_1fr_auto] gap-2.5 items-stretch">
+            <button onclick="navigateHistory(1)" id="historyPrevBtn" title="Previous wine" class="px-3.5 flex items-center justify-center rounded-2xl border-2 border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 hover:border-slate-400 dark:hover:border-slate-500 transition disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:border-slate-200 dark:disabled:hover:border-slate-700">
+              <i data-lucide="chevron-left" class="w-5 h-5"></i>
+            </button>
+
             <button onclick="scanAnotherDirect()" class="py-3 border-2 border-dashed border-indigo-400/40 hover:border-indigo-500 bg-indigo-50/50 dark:bg-indigo-950/20 text-slate-700 dark:text-slate-200 rounded-2xl font-bold text-xs transition flex items-center justify-center gap-2">
               <i data-lucide="camera" class="w-4 h-4"></i>
               <span>Scan another bottle</span>
             </button>
-            <button onclick="openHistory()" id="historyBtn" class="py-3 border-2 border-slate-200 dark:border-slate-700 hover:border-slate-400 dark:hover:border-slate-500 bg-slate-50 dark:bg-slate-800/50 text-slate-700 dark:text-slate-200 rounded-2xl font-bold text-xs transition flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed">
-              <i data-lucide="history" class="w-4 h-4"></i>
-              <span>Previous wines</span>
+
+            <button onclick="navigateHistory(-1)" id="historyNextBtn" title="Next wine" class="px-3.5 flex items-center justify-center rounded-2xl border-2 border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 hover:border-slate-400 dark:hover:border-slate-500 transition disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:border-slate-200 dark:disabled:hover:border-slate-700">
+              <i data-lucide="chevron-right" class="w-5 h-5"></i>
             </button>
           </div>
 
-          <!-- History navigation bar — shown only while browsing a saved past scan -->
-          <div id="historyNavBar" class="hidden items-center justify-between bg-slate-100 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-xl px-2 py-2">
-            <button onclick="navigateHistory(1)" id="historyPrevBtn" class="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-900 transition disabled:opacity-30 disabled:cursor-not-allowed">
-              <i data-lucide="chevron-left" class="w-3.5 h-3.5"></i> Previous
-            </button>
-            <span id="historyPositionLabel" class="text-[10px] font-bold text-slate-400 uppercase tracking-wide"></span>
-            <button onclick="navigateHistory(-1)" id="historyNextBtn" class="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-900 transition disabled:opacity-30 disabled:cursor-not-allowed">
-              Next <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
-            </button>
-          </div>
+          <p id="historyPositionLabel" class="hidden text-center text-[10px] font-bold text-slate-400 uppercase tracking-wide"></p>
 
         </div>
       </div>
@@ -281,13 +281,16 @@
   }
 
   // =========================================================================
-  // HISTORY — last 5 scanned wines, stored in localStorage on this device only.
+  // HISTORY — last 10 scanned wines, stored in localStorage on this device only.
   // Each entry is the full wine data object (identity, facts, quality score,
   // tasting profile, and whatever valuation/exam note were fetched for it).
+  // The Previous/Next buttons are always visible on the results screen; they're
+  // simply greyed out (disabled) when there's nothing to navigate to in that
+  // direction, rather than being hidden behind a separate "enter history" step.
   // =========================================================================
   const HISTORY_KEY = 'sommelier-history';
-  const HISTORY_LIMIT = 5;
-  let historyIndex = -1; // -1 = not currently browsing history (viewing a fresh scan)
+  const HISTORY_LIMIT = 10;
+  let historyIndex = 0; // position of the currently displayed wine within history (0 = most recent)
 
   function getHistory() {
     try {
@@ -305,17 +308,17 @@
       // localStorage may be unavailable (private browsing, storage full) — fail silently,
       // history simply won't persist for this session rather than breaking the app.
     }
-    updateHistoryButtonState();
+    updateCaptureScreenButtonState();
   }
 
   // Saves (or updates) the currently displayed wine at the front of history.
-  // If we're currently browsing an existing history entry (historyIndex >= 0),
+  // If we're currently viewing an existing history entry (not a brand new scan),
   // updates that entry in place instead of creating a duplicate.
-  function saveCurrentWineToHistory() {
+  function saveCurrentWineToHistory(isNewScan) {
     if (!currentWineData) return;
     const history = getHistory();
 
-    if (historyIndex >= 0 && history[historyIndex]) {
+    if (!isNewScan && history[historyIndex]) {
       history[historyIndex] = currentWineData;
       setHistory(history);
       return;
@@ -327,21 +330,21 @@
     historyIndex = 0; // the just-saved scan is now entry 0 (most recent)
   }
 
-  function updateHistoryButtonState() {
-    const btn = document.getElementById('historyBtn');
+  // Grey out / enable the "Show last scanned wine" button on the capture screen
+  function updateCaptureScreenButtonState() {
+    const btn = document.getElementById('lastScannedBtn');
     if (!btn) return;
-    const hasHistory = getHistory().length > 0;
-    btn.disabled = !hasHistory;
+    btn.disabled = getHistory().length === 0;
   }
 
-  function openHistory() {
+  function showLastScannedWine() {
     const history = getHistory();
     if (history.length === 0) return;
-    historyIndex = 0; // most recent
+    historyIndex = 0;
     currentWineData = history[historyIndex];
     renderResults(currentWineData);
+    updateHistoryNavButtons();
     showScreen('resultsScreen');
-    showHistoryNav();
   }
 
   function navigateHistory(direction) {
@@ -352,26 +355,27 @@
     historyIndex = newIndex;
     currentWineData = history[historyIndex];
     renderResults(currentWineData);
-    showHistoryNav();
+    updateHistoryNavButtons();
   }
 
-  function showHistoryNav() {
+  // Updates the Previous/Next buttons' enabled state to reflect the current
+  // position in history — always visible, just greyed when there's nowhere to go.
+  function updateHistoryNavButtons() {
     const history = getHistory();
-    const bar = document.getElementById('historyNavBar');
-    bar.classList.remove('hidden');
-    bar.classList.add('flex');
+    const prevBtn = document.getElementById('historyPrevBtn');
+    const nextBtn = document.getElementById('historyNextBtn');
+    const label = document.getElementById('historyPositionLabel');
+    if (!prevBtn || !nextBtn) return;
 
-    document.getElementById('historyPositionLabel').innerText = `${historyIndex + 1} of ${history.length}`;
-    document.getElementById('historyPrevBtn').disabled = (historyIndex >= history.length - 1);
-    document.getElementById('historyNextBtn').disabled = (historyIndex <= 0);
-    lucide.createIcons();
-  }
+    prevBtn.disabled = (history.length === 0) || (historyIndex >= history.length - 1);
+    nextBtn.disabled = (history.length === 0) || (historyIndex <= 0);
 
-  function hideHistoryNav() {
-    historyIndex = -1;
-    const bar = document.getElementById('historyNavBar');
-    bar.classList.add('hidden');
-    bar.classList.remove('flex');
+    if (history.length > 0) {
+      label.innerText = `${historyIndex + 1} of ${history.length}`;
+      label.classList.remove('hidden');
+    } else {
+      label.classList.add('hidden');
+    }
   }
 
   function resetToCapture() {
@@ -384,7 +388,7 @@
     document.getElementById('valuationResults').classList.add('hidden');
     document.getElementById('valuationBtn').classList.remove('hidden');
     resetValuationButton();
-    hideHistoryNav();
+    updateCaptureScreenButtonState();
     document.getElementById('labelCameraInput').value = '';
     showScreen('captureScreen');
     lucide.createIcons();
@@ -419,9 +423,9 @@
 
       if (result && result.status === "success" && result.data) {
         currentWineData = result.data;
-        hideHistoryNav(); // a fresh scan is not "browsing history"
         renderResults(currentWineData);
-        saveCurrentWineToHistory();
+        saveCurrentWineToHistory(true); // true = this is a brand new scan, not an edit to a viewed entry
+        updateHistoryNavButtons();
         showScreen('resultsScreen');
       } else {
         showError((result && result.message) ? result.message : "Gemini could not analyze this label.");
@@ -676,7 +680,8 @@
   }
 
   selectBottleSize('750'); // reflect the default toggle state visually on load
-  updateHistoryButtonState();
+  updateCaptureScreenButtonState();
+  updateHistoryNavButtons();
   lucide.createIcons();
 </script>
 </body>
