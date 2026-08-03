@@ -162,30 +162,26 @@
             </div>
           </div>
 
+          <!-- Bottle size toggle — feeds both the valuation and exam note requests -->
+          <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-3 shadow-sm">
+            <div class="grid grid-cols-2 gap-2">
+              <button onclick="selectBottleSize('750')" id="sizeBtn750" class="format-btn flex items-center justify-center gap-2 py-2.5 rounded-xl border-2 transition">
+                <i data-lucide="wine" class="w-4 h-4"></i>
+                <span class="text-xs font-bold">Regular (750 mL)</span>
+              </button>
+              <button onclick="selectBottleSize('1500')" id="sizeBtn1500" class="format-btn flex items-center justify-center gap-2 py-2.5 rounded-xl border-2 transition">
+                <i data-lucide="wine" class="w-5 h-5"></i>
+                <span class="text-xs font-bold">Magnum (1.5 L)</span>
+              </button>
+            </div>
+          </div>
+
           <!-- Market Value & Drinking Window (fetched on demand) -->
           <div id="valuationSection" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm">
-            <button id="valuationBtn" onclick="promptValuationFormat()" class="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-emerald-400 hover:bg-emerald-500 text-white font-bold text-xs transition shadow-sm">
+            <button id="valuationBtn" onclick="fetchValuation()" class="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-emerald-400 hover:bg-emerald-500 text-white font-bold text-xs transition shadow-sm">
               <i data-lucide="tag" class="w-3.5 h-3.5"></i>
-              <span>Generate Market Value &amp; Drinking Window</span>
+              <span>Generate MARKET VALUE &amp; DRINKING WINDOW for this wine</span>
             </button>
-
-            <!-- Contextual format prompt: format affects the value/window estimate, so it's
-                 only asked here, right before the request that actually needs it. -->
-            <div id="valuationFormatPrompt" class="hidden space-y-2.5 pt-1">
-              <p class="text-[11px] font-bold text-slate-500 dark:text-slate-400 text-center uppercase tracking-wide">What format is this bottle?</p>
-              <div class="grid grid-cols-2 gap-2.5">
-                <button onclick="selectValuationFormat('750')" id="valFormatBtn750" class="format-btn flex flex-col items-center gap-1 py-2.5 rounded-xl border-2 transition">
-                  <i data-lucide="wine" class="w-5 h-5"></i>
-                  <span class="text-xs font-bold">750 mL</span>
-                  <span class="text-[10px] text-slate-400">Standard</span>
-                </button>
-                <button onclick="selectValuationFormat('1500')" id="valFormatBtn1500" class="format-btn flex flex-col items-center gap-1 py-2.5 rounded-xl border-2 transition">
-                  <i data-lucide="wine" class="w-6 h-6"></i>
-                  <span class="text-xs font-bold">1.5 L</span>
-                  <span class="text-[10px] text-slate-400">Magnum</span>
-                </button>
-              </div>
-            </div>
 
             <div id="valuationResults" class="hidden grid grid-cols-2 gap-4 pt-1">
               <div>
@@ -224,10 +220,27 @@
             <div id="examNoteText" class="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed"></div>
           </div>
 
-          <button onclick="resetToCapture()" class="w-full py-3 border-2 border-dashed border-indigo-400/40 hover:border-indigo-500 bg-indigo-50/50 dark:bg-indigo-950/20 text-slate-700 dark:text-slate-200 rounded-2xl font-bold text-sm transition flex items-center justify-center gap-2">
-            <i data-lucide="camera" class="w-4 h-4"></i>
-            <span>Scan another bottle</span>
-          </button>
+          <div class="grid grid-cols-2 gap-3">
+            <button onclick="scanAnotherDirect()" class="py-3 border-2 border-dashed border-indigo-400/40 hover:border-indigo-500 bg-indigo-50/50 dark:bg-indigo-950/20 text-slate-700 dark:text-slate-200 rounded-2xl font-bold text-xs transition flex items-center justify-center gap-2">
+              <i data-lucide="camera" class="w-4 h-4"></i>
+              <span>Scan another bottle</span>
+            </button>
+            <button onclick="openHistory()" id="historyBtn" class="py-3 border-2 border-slate-200 dark:border-slate-700 hover:border-slate-400 dark:hover:border-slate-500 bg-slate-50 dark:bg-slate-800/50 text-slate-700 dark:text-slate-200 rounded-2xl font-bold text-xs transition flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed">
+              <i data-lucide="history" class="w-4 h-4"></i>
+              <span>Previous wines</span>
+            </button>
+          </div>
+
+          <!-- History navigation bar — shown only while browsing a saved past scan -->
+          <div id="historyNavBar" class="hidden items-center justify-between bg-slate-100 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-xl px-2 py-2">
+            <button onclick="navigateHistory(1)" id="historyPrevBtn" class="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-900 transition disabled:opacity-30 disabled:cursor-not-allowed">
+              <i data-lucide="chevron-left" class="w-3.5 h-3.5"></i> Previous
+            </button>
+            <span id="historyPositionLabel" class="text-[10px] font-bold text-slate-400 uppercase tracking-wide"></span>
+            <button onclick="navigateHistory(-1)" id="historyNextBtn" class="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-900 transition disabled:opacity-30 disabled:cursor-not-allowed">
+              Next <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+            </button>
+          </div>
 
         </div>
       </div>
@@ -241,8 +254,8 @@
   // =========================================================================
   const API_URL = "https://script.google.com/macros/s/AKfycbz38Oi1JyRQ3X77RYojgRu4koYs78Y5BOX6FjK6xKlZ-SqmcBb3RlE9TQVzMfNcj1GI/exec";
 
-  let currentWineData = null; // holds the last analysis result in memory only — never persisted
-  let pendingValuationFormat = "750"; // format chosen in the contextual prompt before fetching valuation
+  let currentWineData = null; // holds the currently displayed wine's data (may be a fresh scan or a history entry)
+  let selectedBottleSize = "750"; // toggled above the action buttons, feeds valuation + exam note requests
 
   // ---- Theme (only thing kept in localStorage — a UI preference, not wine data) ----
   function applyTheme(isDark) {
@@ -267,6 +280,100 @@
     });
   }
 
+  // =========================================================================
+  // HISTORY — last 5 scanned wines, stored in localStorage on this device only.
+  // Each entry is the full wine data object (identity, facts, quality score,
+  // tasting profile, and whatever valuation/exam note were fetched for it).
+  // =========================================================================
+  const HISTORY_KEY = 'sommelier-history';
+  const HISTORY_LIMIT = 5;
+  let historyIndex = -1; // -1 = not currently browsing history (viewing a fresh scan)
+
+  function getHistory() {
+    try {
+      const raw = localStorage.getItem(HISTORY_KEY);
+      return raw ? JSON.parse(raw) : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function setHistory(list) {
+    try {
+      localStorage.setItem(HISTORY_KEY, JSON.stringify(list));
+    } catch (e) {
+      // localStorage may be unavailable (private browsing, storage full) — fail silently,
+      // history simply won't persist for this session rather than breaking the app.
+    }
+    updateHistoryButtonState();
+  }
+
+  // Saves (or updates) the currently displayed wine at the front of history.
+  // If we're currently browsing an existing history entry (historyIndex >= 0),
+  // updates that entry in place instead of creating a duplicate.
+  function saveCurrentWineToHistory() {
+    if (!currentWineData) return;
+    const history = getHistory();
+
+    if (historyIndex >= 0 && history[historyIndex]) {
+      history[historyIndex] = currentWineData;
+      setHistory(history);
+      return;
+    }
+
+    history.unshift(currentWineData);
+    if (history.length > HISTORY_LIMIT) history.length = HISTORY_LIMIT;
+    setHistory(history);
+    historyIndex = 0; // the just-saved scan is now entry 0 (most recent)
+  }
+
+  function updateHistoryButtonState() {
+    const btn = document.getElementById('historyBtn');
+    if (!btn) return;
+    const hasHistory = getHistory().length > 0;
+    btn.disabled = !hasHistory;
+  }
+
+  function openHistory() {
+    const history = getHistory();
+    if (history.length === 0) return;
+    historyIndex = 0; // most recent
+    currentWineData = history[historyIndex];
+    renderResults(currentWineData);
+    showScreen('resultsScreen');
+    showHistoryNav();
+  }
+
+  function navigateHistory(direction) {
+    const history = getHistory();
+    const newIndex = historyIndex + direction;
+    if (newIndex < 0 || newIndex >= history.length) return;
+
+    historyIndex = newIndex;
+    currentWineData = history[historyIndex];
+    renderResults(currentWineData);
+    showHistoryNav();
+  }
+
+  function showHistoryNav() {
+    const history = getHistory();
+    const bar = document.getElementById('historyNavBar');
+    bar.classList.remove('hidden');
+    bar.classList.add('flex');
+
+    document.getElementById('historyPositionLabel').innerText = `${historyIndex + 1} of ${history.length}`;
+    document.getElementById('historyPrevBtn').disabled = (historyIndex >= history.length - 1);
+    document.getElementById('historyNextBtn').disabled = (historyIndex <= 0);
+    lucide.createIcons();
+  }
+
+  function hideHistoryNav() {
+    historyIndex = -1;
+    const bar = document.getElementById('historyNavBar');
+    bar.classList.add('hidden');
+    bar.classList.remove('flex');
+  }
+
   function resetToCapture() {
     currentWineData = null;
     document.getElementById('examNoteCard').classList.add('hidden');
@@ -277,9 +384,17 @@
     document.getElementById('valuationResults').classList.add('hidden');
     document.getElementById('valuationBtn').classList.remove('hidden');
     resetValuationButton();
+    hideHistoryNav();
     document.getElementById('labelCameraInput').value = '';
     showScreen('captureScreen');
     lucide.createIcons();
+  }
+
+  // "Scan another bottle" from the results screen skips the capture screen tap entirely —
+  // reset state, then immediately trigger the camera/file picker.
+  function scanAnotherDirect() {
+    resetToCapture();
+    document.getElementById('labelCameraInput').click();
   }
 
   // ---- Capture & analyze ----
@@ -304,7 +419,9 @@
 
       if (result && result.status === "success" && result.data) {
         currentWineData = result.data;
+        hideHistoryNav(); // a fresh scan is not "browsing history"
         renderResults(currentWineData);
+        saveCurrentWineToHistory();
         showScreen('resultsScreen');
       } else {
         showError((result && result.message) ? result.message : "Gemini could not analyze this label.");
@@ -398,10 +515,42 @@
     document.getElementById('resultPalate').innerText = tp.palate || '—';
     document.getElementById('resultFlavours').innerText = tp.flavours || '—';
 
-    // Reset the on-demand valuation section for a fresh scan
-    document.getElementById('valuationResults').classList.add('hidden');
-    document.getElementById('valuationBtn').classList.remove('hidden');
-    resetValuationButton();
+    // Restore bottle size toggle to whatever was used for this wine's valuation, if any
+    selectBottleSize(w.valuationFormat || '750');
+
+    // Valuation: restore if this wine already has one saved (history), otherwise show the button
+    if (w.marketValue || w.drinkingWindow) {
+      const mv = w.marketValue || {};
+      const dw = w.drinkingWindow || {};
+      document.getElementById('resultMarketValue').innerText = mv.estimate || '—';
+      document.getElementById('resultMarketNote').innerText = mv.note || '';
+      document.getElementById('resultDrinkingWindow').innerText = (dw.startYear && dw.endYear) ? `${dw.startYear}–${dw.endYear}` : '—';
+      document.getElementById('resultDrinkingWindowNote').innerText = dw.note || '';
+      document.getElementById('valuationResults').classList.remove('hidden');
+      document.getElementById('valuationBtn').classList.add('hidden');
+    } else {
+      document.getElementById('valuationResults').classList.add('hidden');
+      document.getElementById('valuationBtn').classList.remove('hidden');
+      resetValuationButton();
+    }
+
+    // Exam note: restore if this wine already has one saved (history), otherwise hide it
+    const examBtn = document.getElementById('examNoteBtn');
+    if (w.examNote) {
+      const escaped = String(w.examNote)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+      const bolded = escaped.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>").replace(/\n/g, "<br>");
+      document.getElementById('examNoteText').innerHTML = bolded;
+      document.getElementById('examNoteCard').classList.remove('hidden');
+      examBtn.innerHTML = `<i data-lucide="check" class="w-3.5 h-3.5"></i><span>WSET tasting note ready below</span>`;
+    } else {
+      document.getElementById('examNoteCard').classList.add('hidden');
+      document.getElementById('examNoteText').innerHTML = '';
+      examBtn.disabled = false;
+      examBtn.innerHTML = `<i data-lucide="graduation-cap" class="w-3.5 h-3.5"></i><span>Get a full WSET Level 3 tasting note</span>`;
+    }
 
     lucide.createIcons();
   }
@@ -410,57 +559,41 @@
     const btn = document.getElementById('valuationBtn');
     btn.disabled = false;
     btn.classList.remove('hidden');
-    btn.innerHTML = `<i data-lucide="tag" class="w-3.5 h-3.5"></i><span>Generate Market Value &amp; Drinking Window</span>`;
-    document.getElementById('valuationFormatPrompt').classList.add('hidden');
+    btn.innerHTML = `<i data-lucide="tag" class="w-3.5 h-3.5"></i><span>Generate MARKET VALUE &amp; DRINKING WINDOW for this wine</span>`;
     lucide.createIcons();
   }
 
-  // Step 1: reveal the contextual format prompt instead of fetching immediately —
-  // format materially changes the market value and drinking window, so it needs to
-  // be captured right before the request that actually uses it, not upfront at scan time.
-  function promptValuationFormat() {
-    document.getElementById('valuationBtn').classList.add('hidden');
-    document.getElementById('valuationFormatPrompt').classList.remove('hidden');
-    selectValuationFormat(pendingValuationFormat); // reflect current default selection visually
-  }
-
-  function selectValuationFormat(fmt) {
-    pendingValuationFormat = fmt;
-    const btn750 = document.getElementById('valFormatBtn750');
-    const btn1500 = document.getElementById('valFormatBtn1500');
-    const activeClasses = ['border-emerald-500', 'bg-emerald-50', 'dark:bg-emerald-950/40', 'text-emerald-600', 'dark:text-emerald-400'];
+  // Bottle size toggle — sits above both action buttons, feeds whichever request
+  // needs it (currently just valuation, since format affects market pricing/aging).
+  function selectBottleSize(size) {
+    selectedBottleSize = size;
+    const btn750 = document.getElementById('sizeBtn750');
+    const btn1500 = document.getElementById('sizeBtn1500');
+    const activeClasses = ['border-rose-500', 'bg-rose-50', 'dark:bg-rose-950/40', 'text-rose-600', 'dark:text-rose-400'];
     const inactiveClasses = ['border-slate-200', 'dark:border-slate-700', 'bg-white', 'dark:bg-slate-900', 'text-slate-500', 'dark:text-slate-400'];
 
     [btn750, btn1500].forEach(btn => btn.classList.remove(...activeClasses, ...inactiveClasses));
 
-    const active = fmt === '750' ? btn750 : btn1500;
-    const inactive = fmt === '750' ? btn1500 : btn750;
+    const active = size === '750' ? btn750 : btn1500;
+    const inactive = size === '750' ? btn1500 : btn750;
     active.classList.add(...activeClasses);
     inactive.classList.add(...inactiveClasses);
-
-    fetchValuation(fmt);
   }
 
-  // Step 2: On-demand Market Value + Drinking Window — deliberately NOT part of the
-  // initial scan. This is the slower, 3-pass-averaged call (see GET_VALUATION in
-  // Code.gs), so keeping it behind a button means the fast initial identification
-  // isn't held up waiting on numbers most people won't check every single time.
-  async function fetchValuation(format) {
+  // On-demand Market Value + Drinking Window — deliberately NOT part of the initial
+  // scan. This is the slower, 3-pass-averaged call (see GET_VALUATION in Code.gs),
+  // so keeping it behind a button means the fast initial identification isn't held
+  // up waiting on numbers most people won't check every single time.
+  async function fetchValuation() {
     if (!currentWineData) return;
+    const btn = document.getElementById('valuationBtn');
 
-    document.getElementById('valuationFormatPrompt').classList.add('hidden');
-
-    // Show a temporary loading state where the format prompt was
-    const loadingHtml = `<div class="flex items-center justify-center gap-2 py-2 text-xs font-bold text-emerald-600 dark:text-emerald-400"><i data-lucide="loader" class="w-3.5 h-3.5 animate-spin"></i><span>Checking value &amp; drinking window...</span></div>`;
-    const formatPromptEl = document.getElementById('valuationFormatPrompt');
-    const loadingEl = document.createElement('div');
-    loadingEl.id = 'valuationLoadingState';
-    loadingEl.innerHTML = loadingHtml;
-    formatPromptEl.insertAdjacentElement('afterend', loadingEl);
+    btn.disabled = true;
+    btn.innerHTML = `<i data-lucide="loader" class="w-3.5 h-3.5 animate-spin"></i><span>Checking value &amp; drinking window...</span>`;
     lucide.createIcons();
 
     try {
-      const result = await callApi("GET_VALUATION", { identity: currentWineData.identity, format: format || pendingValuationFormat });
+      const result = await callApi("GET_VALUATION", { identity: currentWineData.identity, format: selectedBottleSize });
 
       if (result && result.status === "success" && result.data) {
         const mv = result.data.marketValue || {};
@@ -471,7 +604,14 @@
         document.getElementById('resultDrinkingWindow').innerText = (dw.startYear && dw.endYear) ? `${dw.startYear}–${dw.endYear}` : '—';
         document.getElementById('resultDrinkingWindowNote').innerText = dw.note || '';
 
+        // Save the fetched valuation onto the current wine record so it's preserved in history
+        currentWineData.marketValue = mv;
+        currentWineData.drinkingWindow = dw;
+        currentWineData.valuationFormat = selectedBottleSize;
+        saveCurrentWineToHistory();
+
         document.getElementById('valuationResults').classList.remove('hidden');
+        btn.classList.add('hidden');
       } else {
         const reason = (result && result.message) ? result.message : "Unknown error";
         alert(`Gemini could not fetch a valuation.\n\nReason: ${reason}`);
@@ -481,8 +621,6 @@
       console.error(err);
       resetValuationButton();
     } finally {
-      const loadingState = document.getElementById('valuationLoadingState');
-      if (loadingState) loadingState.remove();
       lucide.createIcons();
     }
   }
@@ -508,6 +646,10 @@
         document.getElementById('examNoteText').innerHTML = bolded;
         document.getElementById('examNoteCard').classList.remove('hidden');
         btn.innerHTML = `<i data-lucide="check" class="w-3.5 h-3.5"></i><span>WSET tasting note ready below</span>`;
+
+        // Save onto the current wine record so it's preserved in history
+        currentWineData.examNote = result.note;
+        saveCurrentWineToHistory();
       } else {
         const reason = (result && result.message) ? result.message : "Unknown error";
         alert(`Gemini could not generate the exam note.\n\nReason: ${reason}`);
@@ -533,6 +675,8 @@
     return await response.json();
   }
 
+  selectBottleSize('750'); // reflect the default toggle state visually on load
+  updateHistoryButtonState();
   lucide.createIcons();
 </script>
 </body>
