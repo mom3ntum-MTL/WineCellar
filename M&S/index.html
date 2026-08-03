@@ -38,7 +38,10 @@
 </head>
 <body class="min-h-screen bg-slate-100 text-slate-900 dark:bg-[#0b0f19] dark:text-slate-100 font-sans pb-12 antialiased">
 
-  <header class="sticky top-0 z-30 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-4 py-3 shadow-sm">
+  <div id="toastContainer" class="fixed bottom-5 left-1/2 -translate-x-1/2 z-[60] flex flex-col items-center gap-2 pointer-events-none"></div>
+
+  <header class="sticky top-0 z-30 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-4 py-3 shadow-sm relative">
+    <div id="topProgressBar" class="absolute bottom-0 left-0 h-0.5 bg-rose-500 w-0 opacity-0 transition-all duration-300 ease-out"></div>
     <div class="max-w-[98%] w-full mx-auto flex flex-wrap items-center justify-between gap-3">
       
       <!-- Left: Logo & Cellar Stats -->
@@ -176,17 +179,14 @@
       </table>
     </div>
 
-    <div class="grid grid-cols-3 items-center pt-2">
-      <div></div>
-      <div class="flex justify-center">
-        <button onclick="openArchivesModal()" class="flex items-center space-x-2 px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800/60 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 font-medium text-sm transition shadow-sm border border-slate-200 dark:border-slate-700">
-          <i data-lucide="bottle-wine" class="w-4 h-4 text-slate-400 dark:text-slate-500 -rotate-[150deg]"></i>
-          <span>Consult Removed Bottles</span>
-        </button>
-      </div>
-      <div class="flex justify-end">
-        <p class="text-xs italic text-slate-400 dark:text-slate-500">my little Cellar app - by <span class="font-bold not-italic">mom3ntum</span></p>
-      </div>
+    <div class="flex flex-wrap items-center justify-between gap-3 pt-2">
+      <button onclick="openArchivesModal()" class="flex items-center space-x-2 px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800/60 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 font-medium text-sm transition shadow-sm border border-slate-200 dark:border-slate-700">
+        <i data-lucide="bottle-wine" class="w-4 h-4 text-slate-400 dark:text-slate-500 -rotate-[150deg]"></i>
+        <span>Consult Removed Bottles</span>
+      </button>
+      <p class="text-xs italic text-slate-500 dark:text-slate-400 ml-auto">
+        <span class="font-bold text-slate-700 dark:text-slate-200">my little Cellar app</span> - by <span class="font-semibold not-italic text-slate-400 dark:text-slate-500">mom3ntum</span>
+      </p>
     </div>
 
   </main>
@@ -389,6 +389,39 @@
     </div>
   </div>
 
+  <div id="drinkConfirmModal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-900 max-w-sm w-full rounded-2xl p-6 space-y-4 border border-slate-200 dark:border-slate-800 shadow-2xl">
+      <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2">
+        <h3 class="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-1.5">
+          <i data-lucide="wine" class="w-4 h-4 text-rose-500"></i> Drink / Remove Wine
+        </h3>
+        <button onclick="closeModal('drinkConfirmModal')" class="text-slate-400 hover:text-rose-500 transition"><i data-lucide="x" class="w-4 h-4"></i></button>
+      </div>
+
+      <div>
+        <p id="drinkConfirmBottleName" class="text-sm font-semibold text-slate-800 dark:text-slate-100"></p>
+        <p id="drinkConfirmStockLine" class="text-xs text-slate-400 mt-0.5"></p>
+      </div>
+
+      <div class="space-y-1.5">
+        <label class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Quantity to remove</label>
+        <div class="flex items-center justify-center gap-3 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-xl p-2">
+          <button type="button" onclick="adjustDrinkQuantity(-1)" class="w-9 h-9 flex items-center justify-center rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-950/40 dark:hover:text-rose-400 transition font-bold text-lg">−</button>
+          <input type="number" id="drinkQuantityInput" min="1" step="1" value="1" oninput="clampDrinkQuantityInput()" class="w-16 text-center text-xl font-extrabold bg-transparent border-none focus:outline-none focus:ring-0 text-slate-900 dark:text-white">
+          <button type="button" onclick="adjustDrinkQuantity(1)" class="w-9 h-9 flex items-center justify-center rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-950/40 dark:hover:text-rose-400 transition font-bold text-lg">+</button>
+        </div>
+        <p id="drinkConfirmError" class="hidden text-[11px] font-medium text-rose-600 dark:text-rose-400 text-center pt-0.5"></p>
+      </div>
+
+      <div class="flex gap-2 pt-1">
+        <button onclick="closeModal('drinkConfirmModal')" class="flex-1 py-2.5 bg-slate-200 dark:bg-slate-800 rounded-xl text-xs font-medium">Cancel</button>
+        <button onclick="confirmDrinkBottle()" class="flex-1 py-2.5 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-xs font-medium flex items-center justify-center gap-1.5">
+          <i data-lucide="wine" class="w-3.5 h-3.5"></i> Confirm
+        </button>
+      </div>
+    </div>
+  </div>
+
   <div id="statsModal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
     <div class="bg-white dark:bg-slate-900 max-w-2xl w-full rounded-2xl p-6 space-y-4 border border-slate-200 dark:border-slate-800 shadow-2xl max-h-[90vh] overflow-y-auto">
       
@@ -561,9 +594,69 @@
     }
 
     // Fetch Inventory
+    // Brief bottom-of-screen confirmation toast — fixed position, never shifts layout.
+    // type: 'success' (emerald), 'error' (rose), or 'info' (slate, default).
+    function showToast(message, type) {
+      const container = document.getElementById("toastContainer");
+      const styles = {
+        success: { icon: "check-circle-2", classes: "bg-emerald-600 text-white" },
+        error: { icon: "alert-circle", classes: "bg-rose-600 text-white" },
+        info: { icon: "info", classes: "bg-slate-800 text-white" }
+      };
+      const cfg = styles[type] || styles.info;
+
+      const toast = document.createElement("div");
+      toast.className = `flex items-center gap-2 px-4 py-2.5 rounded-xl shadow-lg text-xs font-medium ${cfg.classes} opacity-0 translate-y-2 transition-all duration-300`;
+      toast.innerHTML = `<i data-lucide="${cfg.icon}" class="w-4 h-4 shrink-0"></i><span>${message}</span>`;
+      container.appendChild(toast);
+      lucide.createIcons();
+
+      requestAnimationFrame(() => {
+        toast.classList.remove("opacity-0", "translate-y-2");
+      });
+
+      setTimeout(() => {
+        toast.classList.add("opacity-0", "translate-y-2");
+        setTimeout(() => toast.remove(), 300);
+      }, 2600);
+    }
+
+    // Slim, non-layout-shifting progress indicator for background saves/refreshes.
+    // Unlike the big spinner, this never hides or displaces the table underneath it.
+    function showTopProgress() {
+      const bar = document.getElementById("topProgressBar");
+      bar.classList.remove("w-0", "opacity-0");
+      bar.classList.add("opacity-100");
+      bar.style.width = "70%"; // eases toward 70% while the request is in flight
+    }
+    function hideTopProgress() {
+      const bar = document.getElementById("topProgressBar");
+      bar.style.width = "100%"; // snaps to full width to signal completion
+      setTimeout(() => {
+        bar.classList.add("opacity-0");
+        setTimeout(() => {
+          bar.classList.remove("opacity-100");
+          bar.classList.add("w-0");
+          bar.style.width = "";
+        }, 300);
+      }, 150);
+    }
+
+    let hasLoadedInventoryOnce = false;
+
     async function fetchInventory() {
-      document.getElementById("loadingSpinner").classList.remove("hidden");
-      document.getElementById("tableContainer").classList.add("hidden");
+      // Only show the big, space-taking spinner on the very first load, when there's
+      // nothing on screen yet. Background refreshes (after add/edit/drink) keep the
+      // existing table visible and use the slim top progress bar instead, so the
+      // page doesn't jump or flash empty on every small change.
+      const isFirstLoad = !hasLoadedInventoryOnce;
+
+      if (isFirstLoad) {
+        document.getElementById("loadingSpinner").classList.remove("hidden");
+        document.getElementById("tableContainer").classList.add("hidden");
+      } else {
+        showTopProgress();
+      }
 
       try {
         const response = await fetch(API_URL);
@@ -573,11 +666,16 @@
 
         populateFilterDropdowns();
         applyFilters();
+        hasLoadedInventoryOnce = true;
       } catch (err) {
         console.error("Failed to load inventory:", err);
       } finally {
-        document.getElementById("loadingSpinner").classList.add("hidden");
-        document.getElementById("tableContainer").classList.remove("hidden");
+        if (isFirstLoad) {
+          document.getElementById("loadingSpinner").classList.add("hidden");
+          document.getElementById("tableContainer").classList.remove("hidden");
+        } else {
+          hideTopProgress();
+        }
       }
     }
 
@@ -1164,33 +1262,77 @@
       };
 
       closeModal("bottleModal");
-      await sendPostRequest("MODIFY", updatedBottle);
+      const result = await sendPostRequest("MODIFY", updatedBottle);
+      if (result && result.status === "success") {
+        showToast("Changes saved", "success");
+      } else {
+        showToast((result && result.message) ? result.message : "Couldn't save changes", "error");
+      }
     }
 
-    // Drink / Remove Wine — prompts for a quantity (≤ current stock), archives that quantity
-    // (full row A-P + Date Removed) to the Archives sheet, decrements Inventory by that amount,
-    // and removes the Inventory row once it reaches 0.
-    async function consumeBottle() {
+    // Drink / Remove Wine — opens a styled confirmation modal with a quantity stepper
+    // (≤ current stock). Confirming archives that quantity (full row A-P + Date Removed)
+    // to the Archives sheet, decrements Inventory by that amount, and removes the
+    // Inventory row once it reaches 0.
+    function consumeBottle() {
       if (!currentSelectedBottle || currentSelectedBottle.quantity <= 0) return;
 
+      document.getElementById("drinkConfirmBottleName").innerText = `${currentSelectedBottle.producer}${currentSelectedBottle.vintage ? ' — ' + currentSelectedBottle.vintage : ''}`;
+      document.getElementById("drinkConfirmStockLine").innerText = `${currentSelectedBottle.quantity} bottle${currentSelectedBottle.quantity !== 1 ? 's' : ''} currently in stock`;
+
+      const qtyInput = document.getElementById("drinkQuantityInput");
+      qtyInput.value = 1;
+      qtyInput.max = currentSelectedBottle.quantity;
+
+      document.getElementById("drinkConfirmError").classList.add("hidden");
+      document.getElementById("drinkConfirmModal").classList.remove("hidden");
+    }
+
+    function adjustDrinkQuantity(delta) {
+      const qtyInput = document.getElementById("drinkQuantityInput");
+      const stock = currentSelectedBottle ? currentSelectedBottle.quantity : 1;
+      let newValue = (parseInt(qtyInput.value, 10) || 1) + delta;
+      newValue = Math.max(1, Math.min(newValue, stock));
+      qtyInput.value = newValue;
+      document.getElementById("drinkConfirmError").classList.add("hidden");
+    }
+
+    function clampDrinkQuantityInput() {
+      const qtyInput = document.getElementById("drinkQuantityInput");
+      const stock = currentSelectedBottle ? currentSelectedBottle.quantity : 1;
+      let value = parseInt(qtyInput.value, 10);
+      if (isNaN(value)) return; // let them keep typing without fighting the field
+      if (value > stock) qtyInput.value = stock;
+      if (value < 1) qtyInput.value = 1;
+      document.getElementById("drinkConfirmError").classList.add("hidden");
+    }
+
+    async function confirmDrinkBottle() {
+      if (!currentSelectedBottle) return;
+
       const stock = currentSelectedBottle.quantity;
-      const input = prompt(`How many bottles of "${currentSelectedBottle.producer}" would you like to drink/remove? (1–${stock})`, "1");
-
-      if (input === null) return; // user cancelled
-
-      const qtyToRemove = parseInt(input, 10);
+      const qtyToRemove = parseInt(document.getElementById("drinkQuantityInput").value, 10);
+      const errorEl = document.getElementById("drinkConfirmError");
 
       if (!Number.isInteger(qtyToRemove) || qtyToRemove <= 0) {
-        alert("Please enter a valid whole number greater than 0.");
+        errorEl.innerText = "Please enter a valid whole number greater than 0.";
+        errorEl.classList.remove("hidden");
         return;
       }
       if (qtyToRemove > stock) {
-        alert(`You only have ${stock} bottle${stock !== 1 ? 's' : ''} in stock. Please enter ${stock} or fewer.`);
+        errorEl.innerText = `Only ${stock} bottle${stock !== 1 ? 's' : ''} in stock.`;
+        errorEl.classList.remove("hidden");
         return;
       }
 
+      closeModal("drinkConfirmModal");
       closeModal("bottleModal");
-      await sendPostRequest("DRINK", { ...currentSelectedBottle, drinkQuantity: qtyToRemove });
+      const result = await sendPostRequest("DRINK", { ...currentSelectedBottle, drinkQuantity: qtyToRemove });
+      if (result && result.status === "success") {
+        showToast(`Removed ${qtyToRemove} bottle${qtyToRemove !== 1 ? 's' : ''} from the cellar`, "success");
+      } else {
+        showToast((result && result.message) ? result.message : "Couldn't remove bottle", "error");
+      }
     }
 
     // Add New Bottle Modal
@@ -1243,13 +1385,18 @@
       };
 
       closeModal("addModal");
-      await sendPostRequest("ADD", newWine);
+      const result = await sendPostRequest("ADD", newWine);
+      if (result && result.status === "success") {
+        showToast(`${producer} added to the cellar`, "success");
+      } else {
+        showToast((result && result.message) ? result.message : "Couldn't add bottle", "error");
+      }
     }
 
     // Send POST payload to Apps Script API. Returns the parsed JSON response.
     // Pass skipRefresh=true for read-only calls (e.g. AI estimates) that don't change the sheet data.
     async function sendPostRequest(actionType, dataPayload, skipRefresh) {
-      document.getElementById("loadingSpinner").classList.remove("hidden");
+      showTopProgress();
       try {
         const response = await fetch(API_URL, {
           method: "POST",
@@ -1258,14 +1405,14 @@
         });
         const result = await response.json();
         if (!skipRefresh) {
-          await fetchInventory();
+          await fetchInventory(); // fetchInventory manages its own progress indicator from here
         }
         return result;
       } catch (err) {
         console.error("Save error:", err);
         return { status: "error", message: err.toString() };
       } finally {
-        document.getElementById("loadingSpinner").classList.add("hidden");
+        if (skipRefresh) hideTopProgress(); // fetchInventory already hides it otherwise
       }
     }
 
@@ -1276,7 +1423,7 @@
       if (!file) return;
 
       closeModal("scanModal");
-      document.getElementById("loadingSpinner").classList.remove("hidden");
+      showTopProgress();
 
       try {
         const base64Data = await new Promise((resolve, reject) => {
@@ -1313,7 +1460,7 @@
         alert("Something went wrong reading the photo. Please try again.");
         console.error(err);
       } finally {
-        document.getElementById("loadingSpinner").classList.add("hidden");
+        hideTopProgress();
         event.target.value = ""; // allow re-selecting the same file next time
       }
     }
