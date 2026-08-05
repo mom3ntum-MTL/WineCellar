@@ -4,7 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="my little Sommelier">
 <meta name="theme-color" content="#0f172a">
 <title>my little Sommelier app</title>
 <script src="https://cdn.tailwindcss.com"></script>
@@ -30,25 +32,52 @@
     from { opacity: 0; transform: translateY(8px); }
     to { opacity: 1; transform: translateY(0); }
   }
-  .scan-line { animation: scan-line-move 1.8s ease-in-out infinite; }
-  @keyframes scan-line-move {
-    0% { top: 4%; opacity: 0; }
-    15% { opacity: 1; }
-    85% { opacity: 1; }
-    100% { top: 94%; opacity: 0; }
+  /* Splash screen — shown briefly on every launch (fresh tab or PWA from home
+     screen, iOS or Android). iOS Safari's native splash mechanism needs
+     pre-rendered per-device image files we don't have here, so an in-page
+     splash that fades out on load is the reliable cross-platform approach. */
+  #splashScreen {
+    position: fixed; inset: 0; z-index: 100;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px;
+    background: #f8fafc;
+    transition: opacity 0.4s ease, visibility 0.4s ease;
   }
+  html.dark #splashScreen { background: #0b1120; }
+  #splashScreen.splash-hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+  @keyframes splash-pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.06); }
+  }
+  .splash-logo-pulse { animation: splash-pulse 1.8s ease-in-out infinite; }
 </style>
 </head>
 <body class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 min-h-screen transition-colors">
+
+  <!-- Splash Screen -->
+  <div id="splashScreen">
+    <div class="splash-logo-pulse p-5 bg-rose-100 dark:bg-rose-950/80 border border-rose-300 dark:border-rose-500/30 rounded-3xl text-rose-600 dark:text-rose-500">
+      <i data-lucide="wine" class="w-12 h-12"></i>
+    </div>
+    <div class="text-center">
+      <h1 class="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white">my little Sommelier app</h1>
+      <p class="text-sm font-bold text-slate-500 dark:text-slate-400 mt-1">by mom3ntum</p>
+    </div>
+    <div class="flex items-center gap-2 mt-2">
+      <svg viewBox="0 0 24 24" class="w-4 h-4" fill="#4285F4">
+        <path d="M12 0c0 6.627-5.373 12-12 12 6.627 0 12 5.373 12 12 0-6.627 5.373-12 12-12-6.627 0-12-5.373-12-12z"/>
+      </svg>
+      <span class="text-xs font-semibold text-slate-400 dark:text-slate-500">Powered by Gemini</span>
+    </div>
+  </div>
 
   <div class="max-w-md mx-auto min-h-screen flex flex-col safe-top safe-bottom">
 
     <!-- Header -->
     <header class="px-5 pt-5 pb-3 flex items-center justify-between">
       <div class="flex items-center gap-2.5">
-        <div class="p-2 bg-rose-100 dark:bg-rose-950/80 border border-rose-300 dark:border-rose-500/30 rounded-xl text-rose-600 dark:text-rose-500">
+        <button onclick="resetToCapture()" title="Back to scan" class="p-2 bg-rose-100 dark:bg-rose-950/80 border border-rose-300 dark:border-rose-500/30 rounded-xl text-rose-600 dark:text-rose-500 hover:bg-rose-200 dark:hover:bg-rose-900 transition cursor-pointer">
           <i data-lucide="wine" class="w-5 h-5"></i>
-        </div>
+        </button>
         <div>
           <h1 class="text-base font-bold tracking-tight leading-tight">my little Sommelier app</h1>
           <p class="text-[10px] italic text-slate-400 dark:text-slate-500">by <span class="font-bold not-italic">mom3ntum</span></p>
@@ -72,7 +101,7 @@
 
         <input type="file" id="labelCameraInput" accept="image/*" capture="environment" class="hidden" onchange="handleImageSelected(event)">
 
-        <div onclick="document.getElementById('labelCameraInput').click()" class="w-56 h-56 max-w-[60vw] max-h-[60vw] border-2 border-dashed border-indigo-400/40 hover:border-indigo-500 rounded-3xl flex flex-col items-center justify-center gap-3 cursor-pointer transition bg-indigo-50/50 dark:bg-indigo-950/20 text-center px-6 mt-4">
+        <div onclick="document.getElementById('labelCameraInput').click()" class="w-full aspect-square max-h-[60vh] border-2 border-dashed border-indigo-400/40 hover:border-indigo-500 rounded-3xl flex flex-col items-center justify-center gap-3 cursor-pointer transition bg-indigo-50/50 dark:bg-indigo-950/20 text-center px-6 mt-4">
           <div class="p-3.5 bg-indigo-100 dark:bg-indigo-950/70 rounded-2xl text-indigo-600 dark:text-indigo-400">
             <i data-lucide="camera" class="w-8 h-8"></i>
           </div>
@@ -86,16 +115,17 @@
           <i data-lucide="history" class="w-3.5 h-3.5"></i>
           <span data-i18n="showLastScanned">Show last scanned wine</span>
         </button>
+
+        <button onclick="openTextEntryModal()" class="mt-3 flex items-center justify-center gap-1.5 text-xs font-semibold text-indigo-500 dark:text-indigo-400 hover:underline">
+          <i data-lucide="keyboard" class="w-3.5 h-3.5"></i>
+          <span data-i18n="addByTextLink">Add a wine using text only</span>
+        </button>
       </div>
 
       <!-- SCREEN 2: Loading -->
       <div id="loadingScreen" class="hidden flex-1 flex flex-col items-center justify-center gap-4 text-center px-8">
-        <div class="relative w-36 h-36 rounded-3xl overflow-hidden bg-rose-100 dark:bg-rose-950/80 border border-rose-200 dark:border-rose-900/60 shadow-sm">
-          <img id="loadingThumb" alt="" class="hidden w-full h-full object-cover">
-          <div id="loadingThumbFallback" class="scan-pulse w-full h-full flex items-center justify-center text-rose-600 dark:text-rose-500">
-            <i data-lucide="sparkles" class="w-10 h-10"></i>
-          </div>
-          <div class="scan-line absolute left-0 right-0 h-0.5 bg-rose-500/80 shadow-[0_0_8px_2px_rgba(244,63,94,0.6)]"></div>
+        <div class="scan-pulse p-5 bg-rose-100 dark:bg-rose-950/80 rounded-3xl text-rose-600 dark:text-rose-500">
+          <i data-lucide="sparkles" class="w-10 h-10"></i>
         </div>
         <div>
           <p class="text-sm font-bold text-slate-700 dark:text-slate-200" data-i18n="loadingTitle">Reading the label...</p>
@@ -262,11 +292,68 @@
       </div>
 
     </main>
+  </div>
 
-    <!-- Toast — non-blocking error notices (replaces alert()) -->
-    <div id="toast" onclick="hideToast()" class="hidden fixed left-1/2 -translate-x-1/2 bottom-6 z-50 max-w-[85vw] flex items-start gap-2 bg-amber-600 text-white text-xs font-medium leading-snug px-4 py-3 rounded-xl shadow-lg fade-in cursor-pointer">
-      <i data-lucide="alert-triangle" class="w-3.5 h-3.5 shrink-0 mt-0.5"></i>
-      <span id="toastMessage"></span>
+  <!-- Text Entry Modal — "Add a wine using text only" -->
+  <div id="textEntryModal" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center">
+    <div class="w-full sm:max-w-sm bg-white dark:bg-slate-900 rounded-t-3xl sm:rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl max-h-[92vh] overflow-y-auto">
+
+      <!-- Form state -->
+      <div id="textEntryFormState" class="p-5 space-y-4">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <div class="p-2 bg-indigo-100 dark:bg-indigo-950/70 rounded-xl text-indigo-600 dark:text-indigo-400">
+              <i data-lucide="keyboard" class="w-4 h-4"></i>
+            </div>
+            <h2 class="text-sm font-bold text-slate-800 dark:text-slate-100" data-i18n="textEntryTitle">Add a wine by text</h2>
+          </div>
+          <button onclick="closeTextEntryModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition">
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+        </div>
+
+        <p class="text-xs text-slate-400" data-i18n="textEntrySubtitle">No label to scan? Describe the wine and my little Sommelier will look it up.</p>
+
+        <div class="space-y-3">
+          <div>
+            <label class="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide" data-i18n="textEntryProducerLabel">Producer *</label>
+            <input type="text" id="textEntryProducer" data-i18n-placeholder="textEntryProducerPlaceholder" placeholder="e.g. Château Montelena" class="mt-1 w-full px-3 py-2.5 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 text-sm text-slate-800 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:border-indigo-400">
+          </div>
+          <div>
+            <label class="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide" data-i18n="textEntryAppellationLabel">Appellation / Cuvée *</label>
+            <input type="text" id="textEntryAppellation" data-i18n-placeholder="textEntryAppellationPlaceholder" placeholder="e.g. Napa Valley Chardonnay" class="mt-1 w-full px-3 py-2.5 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 text-sm text-slate-800 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:border-indigo-400">
+          </div>
+          <div>
+            <label class="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide" data-i18n="textEntryVintageLabel">Vintage *</label>
+            <input type="text" id="textEntryVintage" data-i18n-placeholder="textEntryVintagePlaceholder" placeholder="e.g. 2019 or NV" class="mt-1 w-full px-3 py-2.5 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 text-sm text-slate-800 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:border-indigo-400">
+          </div>
+          <div>
+            <label class="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide" data-i18n="textEntryDetailsLabel">Anything else? (optional)</label>
+            <textarea id="textEntryDetails" data-i18n-placeholder="textEntryDetailsPlaceholder" placeholder="Region, format, importer, anything you already know..." rows="2" class="mt-1 w-full px-3 py-2.5 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 text-sm text-slate-800 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:border-indigo-400 resize-none"></textarea>
+          </div>
+        </div>
+
+        <p id="textEntryError" class="hidden text-xs font-semibold text-rose-500"></p>
+
+        <button onclick="submitTextEntry()" class="w-full py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm transition flex items-center justify-center gap-2">
+          <i data-lucide="sparkles" class="w-4 h-4"></i>
+          <span data-i18n="textEntrySubmit">Find this wine</span>
+        </button>
+      </div>
+
+      <!-- Loading state — a "reading/searching" animation distinct from the camera scan pulse -->
+      <div id="textEntryLoadingState" class="hidden p-8 flex flex-col items-center justify-center gap-4 text-center">
+        <div class="relative w-16 h-16 flex items-center justify-center">
+          <div class="absolute inset-0 rounded-full border-4 border-indigo-100 dark:border-indigo-950/60"></div>
+          <div class="absolute inset-0 rounded-full border-4 border-indigo-500 border-t-transparent animate-spin"></div>
+          <i data-lucide="book-open-text" class="w-6 h-6 text-indigo-500"></i>
+        </div>
+        <div>
+          <p class="text-sm font-bold text-slate-700 dark:text-slate-200" data-i18n="textEntryLoadingTitle">Looking up this wine...</p>
+          <p class="text-xs text-slate-400 mt-1" data-i18n="textEntryLoadingSubtitle">my little Sommelier is searching its knowledge</p>
+        </div>
+      </div>
+
     </div>
   </div>
 
@@ -278,9 +365,6 @@
 
   let currentWineData = null; // holds the currently displayed wine's data (may be a fresh scan or a history entry)
   let selectedBottleSize = "750"; // toggled above the action buttons, feeds valuation + exam note requests
-  let isProcessingImage = false; // guards against a double-fire while a scan is already in flight
-  let loadingThumbUrl = null; // object URL for the loading-screen photo preview, revoked once no longer needed
-  let toastTimer = null;
 
   // =========================================================================
   // LANGUAGE — English by default. Only the UI chrome and Gemini's free-text
@@ -324,10 +408,22 @@
       photoErrorGeneric: "Something went wrong reading the photo. Please try again.",
       valuationErrorAlert: (reason) => `Gemini could not fetch a valuation.\n\nReason: ${reason}`,
       examNoteErrorAlert: (reason) => `Gemini could not generate the exam note.\n\nReason: ${reason}`,
-      unknownProducer: "Unknown Producer",
-      vintageNV: "NV",
-      abvSuffix: (v) => `${v}% ABV`,
-      rsSuffix: (v) => `${v} g/L RS`
+      addByTextLink: "Add a wine using text only",
+      textEntryTitle: "Add a wine by text",
+      textEntrySubtitle: "No label to scan? Describe the wine and my little Sommelier will look it up.",
+      textEntryProducerLabel: "Producer *",
+      textEntryProducerPlaceholder: "e.g. Château Montelena",
+      textEntryAppellationLabel: "Appellation / Cuvée *",
+      textEntryAppellationPlaceholder: "e.g. Napa Valley Chardonnay",
+      textEntryVintageLabel: "Vintage *",
+      textEntryVintagePlaceholder: "e.g. 2019 or NV",
+      textEntryDetailsLabel: "Anything else? (optional)",
+      textEntryDetailsPlaceholder: "Region, format, importer, anything you already know...",
+      textEntrySubmit: "Find this wine",
+      textEntryLoadingTitle: "Looking up this wine...",
+      textEntryLoadingSubtitle: "my little Sommelier is searching its knowledge",
+      textEntryMissingFields: "Please fill in Producer, Appellation / Cuvée, and Vintage.",
+      textEntryErrorGeneric: "Something went wrong looking up this wine. Please try again."
     },
     fr: {
       captureTitle: "Touchez pour SCANNER une étiquette",
@@ -362,10 +458,22 @@
       photoErrorGeneric: "Une erreur s'est produite lors de la lecture de la photo. Veuillez réessayer.",
       valuationErrorAlert: (reason) => `Gemini n'a pas pu obtenir d'estimation.\n\nRaison : ${reason}`,
       examNoteErrorAlert: (reason) => `Gemini n'a pas pu générer la note de dégustation.\n\nRaison : ${reason}`,
-      unknownProducer: "Producteur inconnu",
-      vintageNV: "SM",
-      abvSuffix: (v) => `${v}% vol.`,
-      rsSuffix: (v) => `${v} g/L de sucre`
+      addByTextLink: "Ajouter un vin par texte seulement",
+      textEntryTitle: "Ajouter un vin par texte",
+      textEntrySubtitle: "Pas d'étiquette à scanner? Décrivez le vin et my little Sommelier le trouvera.",
+      textEntryProducerLabel: "Producteur *",
+      textEntryProducerPlaceholder: "ex. Château Montelena",
+      textEntryAppellationLabel: "Appellation / Cuvée *",
+      textEntryAppellationPlaceholder: "ex. Napa Valley Chardonnay",
+      textEntryVintageLabel: "Millésime *",
+      textEntryVintagePlaceholder: "ex. 2019 ou NV",
+      textEntryDetailsLabel: "Autre chose? (optionnel)",
+      textEntryDetailsPlaceholder: "Région, format, importateur, tout ce que vous savez déjà...",
+      textEntrySubmit: "Trouver ce vin",
+      textEntryLoadingTitle: "Recherche de ce vin...",
+      textEntryLoadingSubtitle: "my little Sommelier consulte ses connaissances",
+      textEntryMissingFields: "Veuillez remplir Producteur, Appellation / Cuvée et Millésime.",
+      textEntryErrorGeneric: "Une erreur s'est produite lors de la recherche. Veuillez réessayer."
     }
   };
 
@@ -396,6 +504,12 @@
       const key = el.getAttribute('data-i18n');
       const translated = TRANSLATIONS[currentLanguage][key];
       if (typeof translated === 'string') el.innerHTML = translated;
+    });
+
+    document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+      const key = el.getAttribute('data-i18n-placeholder');
+      const translated = TRANSLATIONS[currentLanguage][key];
+      if (typeof translated === 'string') el.setAttribute('placeholder', translated);
     });
 
     document.getElementById('languageToggleBtn').innerText = currentLanguage === 'en' ? 'EN' : 'FR';
@@ -451,19 +565,6 @@
     ['captureScreen', 'loadingScreen', 'errorScreen', 'resultsScreen'].forEach(id => {
       document.getElementById(id).classList.toggle('hidden', id !== name);
     });
-  }
-
-  // ---- Toast (non-blocking error notices, used instead of alert()) ----
-  function showToast(message) {
-    document.getElementById('toastMessage').innerText = message;
-    document.getElementById('toast').classList.remove('hidden');
-    lucide.createIcons();
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(hideToast, 4500);
-  }
-  function hideToast() {
-    document.getElementById('toast').classList.add('hidden');
-    clearTimeout(toastTimer);
   }
 
   // =========================================================================
@@ -576,7 +677,6 @@
     resetValuationButton();
     updateCaptureScreenButtonState();
     document.getElementById('labelCameraInput').value = '';
-    setLoadingThumb(null);
     showScreen('captureScreen');
     lucide.createIcons();
   }
@@ -589,78 +689,23 @@
   }
 
   // ---- Capture & analyze ----
-
-  // Downscales/recompresses the captured photo before upload. Camera photos are often
-  // 3000px+ on a side (several MB) — sending that whole thing as base64 is the single
-  // biggest lever on scan speed: it inflates the upload, the Apps Script relay's payload
-  // to Gemini, and Gemini's own image-tokenization time. A label just needs to be legible,
-  // not print-resolution, so this trims to a sane max edge + JPEG quality before anything
-  // is read into base64. If anything goes wrong, it silently falls back to the original
-  // file rather than ever blocking a scan.
-  async function resizeImageForUpload(file, maxDimension = 1600, quality = 0.85) {
-    try {
-      const bitmap = await createImageBitmap(file, { imageOrientation: 'from-image' });
-      const scale = Math.min(1, maxDimension / Math.max(bitmap.width, bitmap.height));
-      const targetW = Math.max(1, Math.round(bitmap.width * scale));
-      const targetH = Math.max(1, Math.round(bitmap.height * scale));
-
-      const canvas = document.createElement('canvas');
-      canvas.width = targetW;
-      canvas.height = targetH;
-      canvas.getContext('2d').drawImage(bitmap, 0, 0, targetW, targetH);
-      if (bitmap.close) bitmap.close();
-
-      const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', quality));
-      return blob || file;
-    } catch (e) {
-      console.error('Image resize failed, uploading original photo instead:', e);
-      return file;
-    }
-  }
-
-  // Shows the photo being analyzed behind the scan-line animation on the loading screen —
-  // mostly reassurance that the right bottle was captured, not just a generic spinner.
-  function setLoadingThumb(blob) {
-    const img = document.getElementById('loadingThumb');
-    const fallback = document.getElementById('loadingThumbFallback');
-    if (loadingThumbUrl) {
-      URL.revokeObjectURL(loadingThumbUrl);
-      loadingThumbUrl = null;
-    }
-    if (!blob) {
-      img.classList.add('hidden');
-      img.removeAttribute('src');
-      fallback.classList.remove('hidden');
-      return;
-    }
-    loadingThumbUrl = URL.createObjectURL(blob);
-    img.src = loadingThumbUrl;
-    img.classList.remove('hidden');
-    fallback.classList.add('hidden');
-  }
-
   async function handleImageSelected(event) {
     const file = event.target.files[0];
     if (!file) return;
-    if (isProcessingImage) return; // guard against a double-fire while a scan is already in flight
-    isProcessingImage = true;
 
     showScreen('loadingScreen');
 
     try {
-      const resizedBlob = await resizeImageForUpload(file);
-      setLoadingThumb(resizedBlob);
-
       const base64Data = await new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = () => resolve(reader.result.split(',')[1]);
         reader.onerror = reject;
-        reader.readAsDataURL(resizedBlob);
+        reader.readAsDataURL(file);
       });
 
       const result = await callApi("ANALYZE_WINE", {
         imageBase64: base64Data,
-        imageMimeType: resizedBlob.type || file.type || "image/jpeg",
+        imageMimeType: file.type || "image/jpeg",
         language: currentLanguage
       });
 
@@ -677,7 +722,6 @@
       console.error(err);
       showError(t('photoErrorGeneric'));
     } finally {
-      isProcessingImage = false;
       lucide.createIcons();
     }
   }
@@ -685,6 +729,68 @@
   function showError(message) {
     document.getElementById('errorMessage').innerText = message;
     showScreen('errorScreen');
+  }
+
+  // ---- "Add a wine using text only" ----
+  function openTextEntryModal() {
+    document.getElementById('textEntryProducer').value = '';
+    document.getElementById('textEntryAppellation').value = '';
+    document.getElementById('textEntryVintage').value = '';
+    document.getElementById('textEntryDetails').value = '';
+    document.getElementById('textEntryError').classList.add('hidden');
+    document.getElementById('textEntryFormState').classList.remove('hidden');
+    document.getElementById('textEntryLoadingState').classList.add('hidden');
+    document.getElementById('textEntryModal').classList.remove('hidden');
+    lucide.createIcons();
+  }
+
+  function closeTextEntryModal() {
+    document.getElementById('textEntryModal').classList.add('hidden');
+  }
+
+  async function submitTextEntry() {
+    const producer = document.getElementById('textEntryProducer').value.trim();
+    const appellation = document.getElementById('textEntryAppellation').value.trim();
+    const vintage = document.getElementById('textEntryVintage').value.trim();
+    const details = document.getElementById('textEntryDetails').value.trim();
+    const errorEl = document.getElementById('textEntryError');
+
+    if (!producer || !appellation || !vintage) {
+      errorEl.innerText = t('textEntryMissingFields');
+      errorEl.classList.remove('hidden');
+      return;
+    }
+    errorEl.classList.add('hidden');
+
+    // Swap to the "reading/searching" animation state within the modal
+    document.getElementById('textEntryFormState').classList.add('hidden');
+    document.getElementById('textEntryLoadingState').classList.remove('hidden');
+    lucide.createIcons();
+
+    try {
+      const result = await callApi("IDENTIFY_WINE_BY_TEXT", {
+        producer, appellation, vintage, details,
+        language: currentLanguage
+      });
+
+      if (result && result.status === "success" && result.data) {
+        currentWineData = result.data;
+        closeTextEntryModal();
+        renderResults(currentWineData);
+        saveCurrentWineToHistory(true); // true = this is a brand new entry, not an edit to a viewed one
+        updateHistoryNavButtons();
+        showScreen('resultsScreen');
+      } else {
+        closeTextEntryModal();
+        showError((result && result.message) ? result.message : t('textEntryErrorGeneric'));
+      }
+    } catch (err) {
+      console.error(err);
+      closeTextEntryModal();
+      showError(t('textEntryErrorGeneric'));
+    } finally {
+      lucide.createIcons();
+    }
   }
 
   const CATEGORY_STYLES = {
@@ -740,18 +846,18 @@
 
   function renderResults(w) {
     const id = w.identity || {};
-    document.getElementById('resultProducer').innerText = id.producer || t('unknownProducer');
+    document.getElementById('resultProducer').innerText = id.producer || 'Unknown Producer';
     document.getElementById('resultAppellation').innerText = id.appellation || '—';
-    document.getElementById('resultVintage').innerText = id.vintage || t('vintageNV');
+    document.getElementById('resultVintage').innerText = id.vintage || 'NV';
     document.getElementById('resultCategoryBadge').innerHTML = getCategoryBadge(id.category);
     document.getElementById('resultRegionBadge').innerText = [id.region, id.country].filter(Boolean).join(', ') || '—';
     document.getElementById('resultCertBadges').innerHTML = getCertificationBadges(id.certifications);
 
     const abvCapsule = document.getElementById('resultAbvCapsule');
     const rsCapsule = document.getElementById('resultRsCapsule');
-    abvCapsule.innerText = id.abv ? t('abvSuffix', id.abv) : '';
+    abvCapsule.innerText = id.abv ? `${id.abv}% ABV` : '';
     abvCapsule.classList.toggle('hidden', !id.abv);
-    rsCapsule.innerText = id.residualSugar ? t('rsSuffix', id.residualSugar) : '';
+    rsCapsule.innerText = id.residualSugar ? `${id.residualSugar} g/L RS` : '';
     rsCapsule.classList.toggle('hidden', !id.residualSugar);
 
     document.getElementById('resultFacts').innerText = w.facts || '—';
@@ -793,12 +899,12 @@
       const bolded = escaped.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>").replace(/\n/g, "<br>");
       document.getElementById('examNoteText').innerHTML = bolded;
       document.getElementById('examNoteCard').classList.remove('hidden');
-      examBtn.innerHTML = `<i data-lucide="check" class="w-3.5 h-3.5"></i><span>${t('examNoteReady')}</span>`;
+      examBtn.innerHTML = `<i data-lucide="check" class="w-3.5 h-3.5"></i><span>WSET tasting note ready below</span>`;
     } else {
       document.getElementById('examNoteCard').classList.add('hidden');
       document.getElementById('examNoteText').innerHTML = '';
       examBtn.disabled = false;
-      examBtn.innerHTML = `<i data-lucide="graduation-cap" class="w-3.5 h-3.5"></i><span>${t('examNoteBtnLabel')}</span>`;
+      examBtn.innerHTML = `<i data-lucide="graduation-cap" class="w-3.5 h-3.5"></i><span>Get a full WSET Level 3 tasting note</span>`;
     }
 
     lucide.createIcons();
@@ -863,7 +969,7 @@
         btn.classList.add('hidden');
       } else {
         const reason = (result && result.message) ? result.message : t('genericError');
-        showToast(t('valuationErrorAlert', reason));
+        alert(t('valuationErrorAlert', reason));
         resetValuationButton();
       }
     } catch (err) {
@@ -902,7 +1008,7 @@
         saveCurrentWineToHistory();
       } else {
         const reason = (result && result.message) ? result.message : t('genericError');
-        showToast(t('examNoteErrorAlert', reason));
+        alert(t('examNoteErrorAlert', reason));
         btn.innerHTML = originalHtml;
         btn.disabled = false;
       }
@@ -928,7 +1034,15 @@
   selectBottleSize('750'); // reflect the default toggle state visually on load
   updateCaptureScreenButtonState();
   updateHistoryNavButtons();
-  applyTranslations(); // renders any saved language preference on load (also calls lucide.createIcons())
+  lucide.createIcons();
+
+  // Splash screen: shown on every launch (fresh tab or PWA from home screen).
+  // Held for a short minimum duration so it reads as an intentional splash
+  // rather than a flash, then faded out once the app underneath is ready.
+  setTimeout(() => {
+    const splash = document.getElementById('splashScreen');
+    if (splash) splash.classList.add('splash-hidden');
+  }, 900);
 </script>
 </body>
 </html>
