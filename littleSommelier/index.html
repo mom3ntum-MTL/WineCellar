@@ -111,9 +111,9 @@
           </div>
         </div>
 
-        <button onclick="openTextEntryModal()" class="mt-5 w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border-2 border-indigo-400/40 hover:border-indigo-500 bg-indigo-50/50 dark:bg-indigo-950/20 text-indigo-600 dark:text-indigo-400 font-bold text-xs transition">
+        <button onclick="openTextEntryModal()" class="mt-5 w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border-2 border-dashed border-indigo-400/40 hover:border-indigo-500 bg-indigo-50/50 dark:bg-indigo-950/20 text-indigo-600 dark:text-indigo-400 font-bold text-xs transition">
           <i data-lucide="keyboard" class="w-3.5 h-3.5"></i>
-          <span data-i18n="addByTextLink">Add a wine using text only</span>
+          <span data-i18n="addByTextLink">Add a wine using TEXT only</span>
         </button>
 
         <button onclick="showLastScannedWine()" id="lastScannedBtn" class="mt-3 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 font-bold text-xs transition hover:border-slate-400 dark:hover:border-slate-500 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:border-slate-200 dark:disabled:hover:border-slate-700">
@@ -189,6 +189,14 @@
               <div id="resultQualityDots" class="flex items-center gap-1.5"></div>
               <span id="resultQualityLabel" class="text-sm font-extrabold text-blue-600 dark:text-blue-400"></span>
             </div>
+          </div>
+
+          <!-- Grapes / Cépages -->
+          <div id="grapesCard" class="hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm">
+            <span class="font-bold text-xs text-slate-700 dark:text-slate-300 flex items-center gap-1.5 mb-3">
+              <i data-lucide="grape" class="w-3.5 h-3.5 text-purple-500"></i> <span data-i18n="grapesTitle">Grapes</span>
+            </span>
+            <div id="resultGrapes" class="flex flex-wrap gap-1.5"></div>
           </div>
 
           <!-- Tasting Profile -->
@@ -385,6 +393,7 @@
       tryAgain: "Try again",
       factsTitle: "Facts & Story",
       qualityScoreTitle: "Quality Score",
+      grapesTitle: "Grapes",
       tastingProfileTitle: "Tasting Profile",
       noseLabel: "Nose",
       palateLabel: "Palate",
@@ -408,7 +417,7 @@
       photoErrorGeneric: "Something went wrong reading the photo. Please try again.",
       valuationErrorAlert: (reason) => `Gemini could not fetch a valuation.\n\nReason: ${reason}`,
       examNoteErrorAlert: (reason) => `Gemini could not generate the exam note.\n\nReason: ${reason}`,
-      addByTextLink: "Add a wine using text only",
+      addByTextLink: "Add a wine using TEXT only",
       textEntryTitle: "Add a wine by text",
       textEntrySubtitle: "No label to scan? Describe the wine and my little Sommelier will look it up.",
       textEntryProducerLabel: "Producer *",
@@ -435,6 +444,7 @@
       tryAgain: "Réessayer",
       factsTitle: "Faits & Histoire",
       qualityScoreTitle: "Score de qualité",
+      grapesTitle: "Cépages",
       tastingProfileTitle: "Profil de dégustation",
       noseLabel: "Nez",
       palateLabel: "Bouche",
@@ -458,7 +468,7 @@
       photoErrorGeneric: "Une erreur s'est produite lors de la lecture de la photo. Veuillez réessayer.",
       valuationErrorAlert: (reason) => `Gemini n'a pas pu obtenir d'estimation.\n\nRaison : ${reason}`,
       examNoteErrorAlert: (reason) => `Gemini n'a pas pu générer la note de dégustation.\n\nRaison : ${reason}`,
-      addByTextLink: "Ajouter un vin par texte seulement",
+      addByTextLink: "Ajouter un vin par TEXTE seulement",
       textEntryTitle: "Ajouter un vin par texte",
       textEntrySubtitle: "Pas d'étiquette à scanner? Décrivez le vin et my little Sommelier le trouvera.",
       textEntryProducerLabel: "Producteur *",
@@ -844,6 +854,32 @@
     labelEl.innerText = (QUALITY_LABEL_DISPLAY[currentLanguage] && QUALITY_LABEL_DISPLAY[currentLanguage][englishLabel]) || englishLabel;
   }
 
+  // Black grapes in burgundy red, white grapes in gold — capped at the top 5
+  // varieties Gemini returns (already ordered dominant-to-least by the prompt).
+  const GRAPE_TYPE_CLASSES = {
+    black: "bg-[#722F37]/10 text-[#722F37] dark:bg-[#722F37]/25 dark:text-[#e8a5ac] border-[#722F37]/30",
+    white: "bg-[#C9A227]/10 text-[#8a6f14] dark:bg-[#C9A227]/25 dark:text-[#f0d778] border-[#C9A227]/30"
+  };
+
+  function renderGrapes(grapes) {
+    const card = document.getElementById('grapesCard');
+    const container = document.getElementById('resultGrapes');
+
+    if (!grapes || !Array.isArray(grapes) || grapes.length === 0) {
+      card.classList.add('hidden');
+      container.innerHTML = '';
+      return;
+    }
+
+    const topFive = grapes.slice(0, 5);
+    container.innerHTML = topFive.map(g => {
+      const classes = GRAPE_TYPE_CLASSES[g.type] || GRAPE_TYPE_CLASSES.black;
+      return `<span class="px-2.5 py-1 text-xs font-semibold rounded-lg border ${classes}">${g.name || '—'}</span>`;
+    }).join('');
+
+    card.classList.remove('hidden');
+  }
+
   function renderResults(w) {
     const id = w.identity || {};
     document.getElementById('resultProducer').innerText = id.producer || 'Unknown Producer';
@@ -864,6 +900,8 @@
 
     const qs = w.qualityScore || {};
     renderQualityScore(qs.score);
+
+    renderGrapes(w.grapes);
 
     const tp = w.tastingProfile || {};
     document.getElementById('resultNose').innerText = tp.nose || '—';
