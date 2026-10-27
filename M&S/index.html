@@ -3,13 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>The Guncles' Cellar</title>
+  <title>my little Cellar</title>
   
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="theme-color" content="#f8fafc">
 
+  <!-- Tailwind CSS & Lucide Icons -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -19,9 +20,12 @@
   </script>
   <script src="https://unpkg.com/lucide@latest"></script>
 
+  <!-- Supabase JS Client v2 -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
   <style>
-    /* Thicker, desktop-friendly scrollbars */
-    ::-webkit-scrollbar { width: 12px; height: 12px; }
+    /* Custom Scrollbars */
+    ::-webkit-scrollbar { width: 10px; height: 10px; }
     ::-webkit-scrollbar-track { background: #e2e8f0; border-radius: 6px; }
     .dark ::-webkit-scrollbar-track { background: #1e293b; }
     ::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 6px; border: 2px solid transparent; background-clip: content-box; }
@@ -38,19 +42,21 @@
 </head>
 <body class="min-h-screen bg-slate-100 text-slate-900 dark:bg-[#0b0f19] dark:text-slate-100 font-sans pb-12 antialiased">
 
+  <!-- Toast Container -->
   <div id="toastContainer" class="fixed bottom-5 left-1/2 -translate-x-1/2 z-[60] flex flex-col items-center gap-2 pointer-events-none"></div>
 
+  <!-- Header -->
   <header class="sticky top-0 z-30 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-4 py-3 shadow-sm relative">
     <div id="topProgressBar" class="absolute bottom-0 left-0 h-0.5 bg-rose-500 w-0 opacity-0 transition-all duration-300 ease-out"></div>
     <div class="max-w-[98%] w-full mx-auto flex flex-wrap items-center justify-between gap-3">
       
-      <!-- Left: Logo & Cellar Stats -->
+      <!-- Left: App Logo & Cellar Stats -->
       <div class="flex items-center space-x-3">
         <button id="randomBottleLogo" onclick="spinForRandomBottle()" title="Pick a random bottle" class="p-2 bg-rose-100 dark:bg-rose-950/80 border border-rose-300 dark:border-rose-500/30 rounded-xl text-rose-600 dark:text-rose-500 hover:bg-rose-200 dark:hover:bg-rose-900 transition cursor-pointer">
           <i data-lucide="wine" class="w-6 h-6"></i>
         </button>
         <div>
-          <h1 class="text-lg font-bold tracking-tight">The Guncles' Cellar</h1>
+          <h1 class="text-lg font-bold tracking-tight">my little Cellar</h1>
           <p class="text-xs text-slate-500 dark:text-slate-400">
             Total: <span id="bottleCount" class="font-bold text-rose-600 dark:text-rose-400">0</span> Bottles 
             • Investment: <span id="totalPaidValue" class="font-bold text-emerald-600 dark:text-emerald-400">$0</span>
@@ -58,9 +64,9 @@
         </div>
       </div>
 
-      <!-- Center: Theme & Analytics Buttons -->
+      <!-- Center: Theme & Analytics -->
       <div class="flex items-center space-x-2">
-        <span class="text-xs font-medium text-slate-600 dark:text-slate-300 hidden sm:inline">App Theme</span>
+        <span class="text-xs font-medium text-slate-600 dark:text-slate-300 hidden sm:inline">Theme</span>
         <button onclick="toggleTheme()" class="flex items-center justify-center w-10 h-10 rounded-xl bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-700 transition" title="Toggle Light/Dark Theme">
           <i data-lucide="sun-moon" class="w-5 h-5"></i>
         </button>
@@ -70,7 +76,7 @@
         <span class="text-xs font-medium text-slate-600 dark:text-slate-300 hidden sm:inline">Statistics</span>
       </div>
 
-      <!-- Right: Actions -->
+      <!-- Right: Main Actions -->
       <div class="flex items-center space-x-2">
         <button onclick="openScanModal()" class="flex items-center space-x-1.5 px-3 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-medium text-xs sm:text-sm transition shadow-md">
           <i data-lucide="camera" class="w-4 h-4"></i>
@@ -85,8 +91,23 @@
     </div>
   </header>
 
-  <main class="max-w-[98%] w-full mx-auto px-2 sm:px-4 py-6 space-y-4">
+  <main class="max-w-[98%] w-full mx-auto px-2 sm:px-4 py-4 space-y-4">
 
+    <!-- Visual Cellar Sections Section -->
+    <div id="visualSectionsContainer" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm space-y-3">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <i data-lucide="layout-grid" class="w-4 h-4 text-rose-500"></i>
+          <h2 class="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">Cellar Sections & Zones</h2>
+        </div>
+        <span id="activeSectionFilterBadge" class="text-[11px] font-semibold text-rose-600 dark:text-rose-400">All Sections</span>
+      </div>
+
+      <!-- Cards Grid for Cellar Sections -->
+      <div id="sectionsCardsGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2.5"></div>
+    </div>
+
+    <!-- Search and Filter Drawer Controls -->
     <div class="flex flex-col sm:flex-row gap-3">
       <div class="relative flex-1">
         <i data-lucide="search" class="w-4 h-4 absolute left-3.5 top-3 text-slate-400"></i>
@@ -94,7 +115,7 @@
           type="text" 
           id="searchInput" 
           oninput="applyFilters()" 
-          placeholder="Search producer, appellation, region, category, section..." 
+          placeholder="Search producer, appellation, region, country, category, notes..." 
           class="w-full pl-10 pr-4 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-800 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-rose-500 transition shadow-sm"
         >
       </div>
@@ -150,13 +171,16 @@
       </div>
     </div>
 
+    <!-- Active Filters Chips -->
     <div id="activeFiltersBar" class="flex flex-wrap gap-2 empty:hidden"></div>
 
+    <!-- Loading Spinner -->
     <div id="loadingSpinner" class="py-12 text-center text-slate-400 space-y-2">
       <i data-lucide="loader" class="w-8 h-8 animate-spin mx-auto text-rose-500"></i>
-      <p class="text-xs font-mono">Accessing & Updating Cellar Database...</p>
+      <p class="text-xs font-mono">Syncing with Supabase Cellar Database...</p>
     </div>
 
+    <!-- Main Wine Inventory Table -->
     <div id="tableContainer" class="hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm overflow-x-auto">
       <table class="w-full text-left text-xs sm:text-sm whitespace-nowrap">
         <thead class="bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-400 text-[11px] uppercase font-bold border-b border-slate-200 dark:border-slate-700 select-none">
@@ -179,6 +203,7 @@
       </table>
     </div>
 
+    <!-- Footer Controls -->
     <div class="flex flex-wrap items-center justify-between gap-3 pt-2">
       <button onclick="openArchivesModal()" class="flex items-center space-x-2 px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800/60 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 font-medium text-sm transition shadow-sm border border-slate-200 dark:border-slate-700">
         <i data-lucide="bottle-wine" class="w-4 h-4 text-slate-400 dark:text-slate-500 -rotate-[150deg]"></i>
@@ -191,6 +216,7 @@
 
   </main>
 
+  <!-- Bottle Details Modal -->
   <div id="bottleModal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
     <div class="bg-white dark:bg-slate-900 max-w-lg w-full rounded-2xl p-6 space-y-4 border border-slate-200 dark:border-slate-800 shadow-2xl max-h-[90vh] overflow-y-auto">
       
@@ -216,7 +242,7 @@
           <label class="text-[10px] font-bold text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
             <i data-lucide="sticky-note" class="w-3.5 h-3.5"></i> Personal Notes
           </label>
-          <textarea id="personalNotesInput" onblur="savePersonalNotes()" rows="1" placeholder="Add a quick personal note..." class="w-full text-xs p-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-rose-500 transition"></textarea>
+          <textarea id="personalNotesInput" onblur="savePersonalNotes()" rows="2" placeholder="Add a quick personal note..." class="w-full text-xs p-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-rose-500 transition"></textarea>
         </div>
 
         <div class="bg-slate-50 dark:bg-slate-800/60 p-3 rounded-xl border border-slate-200 dark:border-slate-700 space-y-2 text-xs">
@@ -229,7 +255,7 @@
             </button>
           </div>
           <div id="tastingNotesText" class="text-slate-600 dark:text-slate-300 leading-relaxed text-[11px] whitespace-pre-line bg-white dark:bg-slate-900/60 p-2.5 rounded-lg border border-slate-200 dark:border-slate-800 max-h-48 overflow-y-auto">
-            No tasting notes generated yet. Click generate to construct a full WSET SAT analysis saved to your sheet.
+            No tasting notes generated yet.
           </div>
         </div>
 
@@ -245,14 +271,15 @@
         </div>
       </div>
 
+      <!-- Modify Wine Form -->
       <form id="editForm" onsubmit="saveModifiedBottle(event)" class="hidden space-y-3 text-xs">
         <input type="hidden" id="editId">
         <div class="grid grid-cols-2 gap-2">
-          <div><label class="text-slate-500">Producer</label><input type="text" id="editProducer" required class="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg"></div>
-          <div><label class="text-slate-500">Appellation / Cuvée</label><input type="text" id="editAppellation" class="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg"></div>
-          <div><label class="text-slate-500">Vintage</label><input type="text" id="editVintage" placeholder="2018 or NV" class="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg"></div>
-          <div><label class="text-slate-500">Region</label><input type="text" id="editRegion" class="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg"></div>
-          <div><label class="text-slate-500">Category</label>
+          <div><label class="text-slate-500 font-semibold">Producer *</label><input type="text" id="editProducer" required class="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg"></div>
+          <div><label class="text-slate-500 font-semibold">Appellation / Cuvée</label><input type="text" id="editAppellation" class="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg"></div>
+          <div><label class="text-slate-500 font-semibold">Vintage *</label><input type="text" id="editVintage" placeholder="2018 or NV" required class="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg"></div>
+          <div><label class="text-slate-500 font-semibold">Region</label><input type="text" id="editRegion" class="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg"></div>
+          <div><label class="text-slate-500 font-semibold">Category</label>
             <select id="editCategory" class="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg">
               <option value="Red Wine">Red Wine</option>
               <option value="White Wine">White Wine</option>
@@ -263,26 +290,29 @@
               <option value="Fortified Wine">Fortified Wine</option>
             </select>
           </div>
-          <div><label class="text-slate-500">Country</label><input type="text" id="editCountry" class="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg"></div>
-          <div><label class="text-slate-500">Format (mL)</label><input type="number" id="editFormat" placeholder="750" class="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg"></div>
-          <div><label class="text-slate-500">Quantity</label><input type="number" id="editQuantity" required class="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg"></div>
-          <div><label class="text-slate-500">Maturity Start</label><input type="number" id="editMaturityStart" class="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg"></div>
-          <div><label class="text-slate-500">Maturity End</label><input type="number" id="editMaturityEnd" class="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg"></div>
-          <div><label class="text-slate-500">Price Paid ($)</label><input type="text" id="editPrice" class="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg"></div>
-          <div><label class="text-slate-500">Market Value ($)</label><input type="text" id="editValue" class="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg"></div>
-          <div><label class="text-slate-500">Date Added</label><input type="date" id="editDateAdded" class="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg"></div>
-          <div><label class="text-slate-500">Cellar Section</label><input type="text" id="editSection" class="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg"></div>
+          <div><label class="text-slate-500 font-semibold">Country</label><input type="text" id="editCountry" class="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg"></div>
+          <div><label class="text-slate-500 font-semibold">Format (mL) *</label><input type="number" id="editFormat" placeholder="750" required class="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg"></div>
+          <div><label class="text-slate-500 font-semibold">Quantity *</label><input type="number" id="editQuantity" min="0" required class="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg"></div>
+          <div><label class="text-slate-500 font-semibold">Maturity Start</label><input type="number" id="editMaturityStart" class="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg"></div>
+          <div><label class="text-slate-500 font-semibold">Maturity End</label><input type="number" id="editMaturityEnd" class="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg"></div>
+          <div><label class="text-slate-500 font-semibold">Price Paid ($)</label><input type="text" id="editPrice" class="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg"></div>
+          <div><label class="text-slate-500 font-semibold">Market Value ($)</label><input type="text" id="editValue" class="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg"></div>
+          <div><label class="text-slate-500 font-semibold">Date Added</label><input type="date" id="editDateAdded" class="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg"></div>
+          <div><label class="text-slate-500 font-semibold">Cellar Section</label>
+            <select id="editSectionSelect" class="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg"></select>
+          </div>
         </div>
 
         <div class="pt-2 flex gap-2">
           <button type="button" onclick="disableEditMode()" class="flex-1 py-2 bg-slate-200 dark:bg-slate-800 rounded-lg font-medium">Cancel</button>
-          <button type="submit" class="flex-1 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-medium">Save</button>
+          <button type="submit" class="flex-1 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-medium">Save Changes</button>
         </div>
       </form>
 
     </div>
   </div>
 
+  <!-- Add Bottle Modal -->
   <div id="addModal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
     <div class="bg-white dark:bg-slate-900 max-w-lg w-full rounded-2xl p-6 space-y-4 border border-slate-200 dark:border-slate-800 shadow-2xl max-h-[90vh] overflow-y-auto">
       
@@ -294,14 +324,13 @@
       <form id="addWineForm" onsubmit="saveNewBottle(event)" class="space-y-3 text-xs" novalidate>
         <div id="addFormValidationMsg" class="hidden text-xs font-medium text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 rounded-lg px-3 py-2"></div>
         <div class="grid grid-cols-2 gap-2">
-          <div><label class="text-slate-500">Producer *</label><input type="text" id="addProducer" class="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg"></div>
-          <div><label class="text-slate-500">Appellation / Cuvée</label><input type="text" id="addAppellation" class="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg"></div>
-          <div><label class="text-slate-500">Vintage *</label><input type="text" id="addVintage" placeholder="2018 or NV" class="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg"></div>
-          <div><label class="text-slate-500">Region</label><input type="text" id="addRegion" placeholder="Bordeaux" class="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg"></div>
-          <div><label class="text-slate-500">Category</label>
-            <select id="addCategory" onchange="this.classList.toggle('text-slate-500', this.value==='')" class="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-500 dark:text-slate-400">
-              <option value="" selected>Choose category</option>
-              <option value="Red Wine">Red Wine</option>
+          <div><label class="text-slate-500 font-semibold">Producer *</label><input type="text" id="addProducer" required class="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg"></div>
+          <div><label class="text-slate-500 font-semibold">Appellation / Cuvée</label><input type="text" id="addAppellation" class="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg"></div>
+          <div><label class="text-slate-500 font-semibold">Vintage *</label><input type="text" id="addVintage" placeholder="2018 or NV" required class="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg"></div>
+          <div><label class="text-slate-500 font-semibold">Region</label><input type="text" id="addRegion" placeholder="Bordeaux" class="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg"></div>
+          <div><label class="text-slate-500 font-semibold">Category</label>
+            <select id="addCategory" class="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-700 dark:text-slate-300">
+              <option value="Red Wine" selected>Red Wine</option>
               <option value="White Wine">White Wine</option>
               <option value="Sparkling Wine">Sparkling Wine</option>
               <option value="Rosé Wine">Rosé Wine</option>
@@ -310,22 +339,25 @@
               <option value="Fortified Wine">Fortified Wine</option>
             </select>
           </div>
-          <div><label class="text-slate-500">Country</label><input type="text" id="addCountry" placeholder="France" class="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg"></div>
-          <div><label class="text-slate-500">Format (mL) *</label><input type="number" id="addFormat" placeholder="750" class="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg"></div>
-          <div><label class="text-slate-500">Quantity *</label><input type="number" id="addQuantity" placeholder="1" class="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg"></div>
-          <div><label class="text-slate-500">Maturity Start</label><input type="number" id="addMaturityStart" placeholder="2024" class="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg"></div>
-          <div><label class="text-slate-500">Maturity End</label><input type="number" id="addMaturityEnd" placeholder="2035" class="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg font-sans"></div>
-          <div><label class="text-slate-500">Price Paid ($)</label><input type="text" id="addPrice" placeholder="45" class="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg"></div>
-          <div><label class="text-slate-500">Market Value ($)</label><input type="text" id="addValue" placeholder="60" class="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg"></div>
-          <div class="col-span-2"><label class="text-slate-500">Cellar Section</label><input type="text" id="addSection" placeholder="Rack A-01" class="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg"></div>
+          <div><label class="text-slate-500 font-semibold">Country</label><input type="text" id="addCountry" placeholder="France" class="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg"></div>
+          <div><label class="text-slate-500 font-semibold">Format (mL) *</label><input type="number" id="addFormat" value="750" required class="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg"></div>
+          <div><label class="text-slate-500 font-semibold">Quantity *</label><input type="number" id="addQuantity" value="1" min="1" required class="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg"></div>
+          <div><label class="text-slate-500 font-semibold">Maturity Start</label><input type="number" id="addMaturityStart" placeholder="2024" class="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg"></div>
+          <div><label class="text-slate-500 font-semibold">Maturity End</label><input type="number" id="addMaturityEnd" placeholder="2035" class="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg"></div>
+          <div><label class="text-slate-500 font-semibold">Price Paid ($)</label><input type="text" id="addPrice" placeholder="45" class="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg"></div>
+          <div><label class="text-slate-500 font-semibold">Market Value ($)</label><input type="text" id="addValue" placeholder="60" class="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg"></div>
+          <div class="col-span-2"><label class="text-slate-500 font-semibold">Cellar Section</label>
+            <select id="addSectionSelect" class="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg"></select>
+          </div>
         </div>
 
-        <button type="submit" class="w-full py-2.5 bg-rose-600 hover:bg-rose-500 text-white rounded-xl font-medium transition mt-2">Add Bottle to Inventory</button>
+        <button type="submit" class="w-full py-2.5 bg-rose-600 hover:bg-rose-500 text-white rounded-xl font-medium transition mt-2">Add Bottle to Supabase Inventory</button>
       </form>
 
     </div>
   </div>
 
+  <!-- Scan Label Modal -->
   <div id="scanModal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
     <div class="bg-white dark:bg-slate-900 max-w-md w-full rounded-2xl p-6 space-y-4 border border-slate-200 dark:border-slate-800 shadow-2xl">
       <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
@@ -347,6 +379,7 @@
     </div>
   </div>
 
+  <!-- Valuation Confirm Modal -->
   <div id="valueConfirmModal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
     <div class="bg-white dark:bg-slate-900 max-w-sm w-full rounded-2xl p-6 space-y-4 border border-slate-200 dark:border-slate-800 shadow-2xl">
       <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2">
@@ -358,7 +391,7 @@
 
       <div class="p-4 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 rounded-xl text-center">
         <div id="estimatedValueDisplay" class="text-2xl font-extrabold text-emerald-600 dark:text-emerald-400">$0</div>
-        <p class="text-[10px] text-slate-400 mt-1">In CAD — generated by Gemini from this bottle's producer, appellation, vintage, category & format</p>
+        <p class="text-[10px] text-slate-400 mt-1">In CAD — generated by Gemini from bottle parameters</p>
       </div>
 
       <div class="flex gap-2">
@@ -368,6 +401,7 @@
     </div>
   </div>
 
+  <!-- Maturity Drinking Window Modal -->
   <div id="maturityConfirmModal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
     <div class="bg-white dark:bg-slate-900 max-w-sm w-full rounded-2xl p-6 space-y-4 border border-slate-200 dark:border-slate-800 shadow-2xl">
       <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2">
@@ -379,7 +413,7 @@
 
       <div class="p-4 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 rounded-xl text-center">
         <div id="estimatedMaturityDisplay" class="text-2xl font-extrabold text-emerald-600 dark:text-emerald-400">0000 – 0000</div>
-        <p class="text-[10px] text-slate-400 mt-1">Generated by Gemini from this bottle's producer, appellation, vintage, category & format</p>
+        <p class="text-[10px] text-slate-400 mt-1">Generated by Gemini from vintage & appellation curve</p>
       </div>
 
       <div class="flex gap-2">
@@ -389,6 +423,7 @@
     </div>
   </div>
 
+  <!-- Drink Bottle Confirmation Modal -->
   <div id="drinkConfirmModal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
     <div class="bg-white dark:bg-slate-900 max-w-sm w-full rounded-2xl p-6 space-y-4 border border-slate-200 dark:border-slate-800 shadow-2xl">
       <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2">
@@ -422,6 +457,7 @@
     </div>
   </div>
 
+  <!-- Cellar Stats Modal -->
   <div id="statsModal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
     <div class="bg-white dark:bg-slate-900 max-w-2xl w-full rounded-2xl p-6 space-y-4 border border-slate-200 dark:border-slate-800 shadow-2xl max-h-[90vh] overflow-y-auto">
       
@@ -472,20 +508,21 @@
     </div>
   </div>
 
+  <!-- Consumed Bottles Archives Modal -->
   <div id="archivesModal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
     <div class="bg-white dark:bg-slate-900 max-w-[96vw] xl:max-w-[1600px] w-full rounded-2xl p-6 space-y-4 border border-slate-200 dark:border-slate-800 shadow-2xl max-h-[90vh] overflow-y-auto">
 
       <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
         <div class="flex items-center space-x-2">
           <i data-lucide="bottle-wine" class="w-5 h-5 text-slate-400 dark:text-slate-500 -rotate-[150deg]"></i>
-          <h3 class="font-bold text-base text-slate-900 dark:text-white">Consumed / Removed Bottles</h3>
+          <h3 class="font-bold text-base text-slate-900 dark:text-white">Consumed / Removed Bottles (Supabase Archives)</h3>
         </div>
         <button onclick="closeModal('archivesModal')" class="text-slate-400 hover:text-rose-500 transition"><i data-lucide="x" class="w-5 h-5"></i></button>
       </div>
 
       <div id="archivesLoadingSpinner" class="py-12 text-center text-slate-400 space-y-2">
         <i data-lucide="loader" class="w-8 h-8 animate-spin mx-auto text-rose-500"></i>
-        <p class="text-xs font-mono">Accessing & Updating Cellar Database...</p>
+        <p class="text-xs font-mono">Loading consumed bottles from Supabase...</p>
       </div>
 
       <div id="archivesTableContainer" class="hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm overflow-x-auto">
@@ -515,27 +552,226 @@
   </div>
 
   <script>
-    // Live Apps Script API URL
-    const API_URL = "https://script.google.com/macros/s/AKfycbyKKdGdomx5xjrFGvceCWH8LwuUjB6NT1-UYHvQVqNrAhr67kgJmBKa50eaz7lK9m1giw/exec";
+    // =========================================================================
+    // SUPABASE & CLOUDFLARE CONFIGURATION
+    // =========================================================================
+    // Substitute your actual Supabase Project details below:
+    const SUPABASE_URL = "https://YOUR_PROJECT_ID.supabase.co";
+    const SUPABASE_ANON_KEY = "YOUR_SUPABASE_ANON_PUBLISHABLE_KEY";
 
+    // Supabase client instance
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    
+    // Cloudflare Pages Functions AI API endpoint
+    const AI_API_URL = "/api";
+
+    // App State
     let wineInventory = [];
+    let cellarSections = [];
+    let activeSectionFilter = null;
     let currentSelectedBottle = null;
     let tempEstimatedValue = "";
     let tempEstimatedMaturity = { start: "", end: "" };
     let sortColumn = 'producer';
     let sortAscending = true;
+    let hasLoadedInventoryOnce = false;
 
-    document.addEventListener("DOMContentLoaded", () => {
+    // Filters
+    const activeFilterSelections = {
+      filterCategory: new Set(),
+      filterReadiness: new Set(),
+      filterCountry: new Set(),
+      filterRegion: new Set(),
+      filterVintage: new Set()
+    };
+
+    const STATIC_FILTER_OPTIONS = {
+      filterCategory: ["Red Wine", "White Wine", "Sparkling Wine", "Rosé Wine", "Orange Wine", "Dessert Wine", "Fortified Wine"],
+      filterReadiness: ["Can Drink Now", "Hold", "Past Peak / Matured"]
+    };
+
+    // =========================================================================
+    // INITIALIZATION & REALTIME
+    // =========================================================================
+    document.addEventListener("DOMContentLoaded", async () => {
       lucide.createIcons();
-      fetchInventory();
+      await fetchCellarSections();
+      await fetchInventory();
+      setupRealtimeSubscriptions();
     });
 
-    // Theme Switcher (Default: Light)
+    function setupRealtimeSubscriptions() {
+      // Subscribes to Supabase Realtime so multiple devices mirror changes instantly
+      supabaseClient
+        .channel('cellar-realtime')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'bottles' }, () => {
+          fetchInventory();
+        })
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'cellar_sections' }, () => {
+          fetchCellarSections();
+        })
+        .subscribe();
+    }
+
     function toggleTheme() {
       document.documentElement.classList.toggle('dark');
     }
 
-    // Dynamic Readiness Calculation
+    // =========================================================================
+    // CELLAR SECTIONS (VISUAL REPRESENTATION)
+    // =========================================================================
+    async function fetchCellarSections() {
+      try {
+        const { data, error } = await supabaseClient
+          .from('cellar_sections')
+          .select('*')
+          .order('sort_order', { ascending: true });
+
+        if (error) throw error;
+        cellarSections = data || [];
+        renderCellarSectionsGrid();
+        populateSectionDropdowns();
+      } catch (err) {
+        console.error("Error loading cellar sections:", err);
+      }
+    }
+
+    function renderCellarSectionsGrid() {
+      const container = document.getElementById("sectionsCardsGrid");
+      if (!container) return;
+
+      // Count bottles in each section from active inventory
+      const countsBySection = {};
+      wineInventory.forEach(w => {
+        const secId = w.sectionId || 'UNASSIGNED';
+        countsBySection[secId] = (countsBySection[secId] || 0) + (Number(w.quantity) || 0);
+      });
+
+      let html = `
+        <div onclick="filterBySection(null)" class="cursor-pointer p-3 rounded-xl border transition flex flex-col justify-between ${activeSectionFilter === null ? 'bg-rose-50 dark:bg-rose-950/40 border-rose-400 dark:border-rose-600 shadow-sm' : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-slate-300'}">
+          <div class="flex items-center gap-1.5 mb-1">
+            <span class="w-2.5 h-2.5 rounded-full bg-slate-400"></span>
+            <span class="text-xs font-bold truncate">All Cellar</span>
+          </div>
+          <div class="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+            ${wineInventory.reduce((s, w) => s + (Number(w.quantity) || 0), 0)} bottles
+          </div>
+        </div>
+      `;
+
+      html += cellarSections.map(sec => {
+        const count = countsBySection[sec.id] || 0;
+        const cap = sec.total_capacity || 0;
+        const isSelected = activeSectionFilter === sec.id;
+        const color = sec.color_code || '#f43f5e';
+
+        return `
+          <div onclick="filterBySection('${sec.id}')" class="cursor-pointer p-3 rounded-xl border transition flex flex-col justify-between ${isSelected ? 'ring-2 ring-offset-1 ring-slate-400 bg-slate-100 dark:bg-slate-800' : 'bg-slate-50 dark:bg-slate-800/80 hover:bg-slate-100 dark:hover:bg-slate-800 border-slate-200 dark:border-slate-700'}">
+            <div class="flex items-center gap-1.5 mb-1">
+              <span class="w-2.5 h-2.5 rounded-full shrink-0" style="background-color: ${color};"></span>
+              <span class="text-xs font-bold truncate" title="${sec.name}">${sec.name}</span>
+            </div>
+            <div class="flex items-baseline justify-between text-[11px]">
+              <span class="font-bold text-slate-800 dark:text-slate-200">${count} btls</span>
+              ${cap > 0 ? `<span class="text-slate-400 text-[10px]">/ ${cap}</span>` : ''}
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      container.innerHTML = html;
+    }
+
+    function filterBySection(sectionId) {
+      activeSectionFilter = sectionId;
+      const badge = document.getElementById("activeSectionFilterBadge");
+      if (sectionId) {
+        const sec = cellarSections.find(s => s.id === sectionId);
+        badge.innerText = sec ? `Filtered: ${sec.name}` : `Section: ${sectionId}`;
+      } else {
+        badge.innerText = "All Sections";
+      }
+      renderCellarSectionsGrid();
+      applyFilters();
+    }
+
+    function populateSectionDropdowns() {
+      const addSelect = document.getElementById("addSectionSelect");
+      const editSelect = document.getElementById("editSectionSelect");
+
+      const optionsHtml = `
+        <option value="">No specific section</option>
+        ${cellarSections.map(s => `<option value="${s.id}">${s.name}</option>`).join('')}
+      `;
+
+      if (addSelect) addSelect.innerHTML = optionsHtml;
+      if (editSelect) editSelect.innerHTML = optionsHtml;
+    }
+
+    // =========================================================================
+    // INVENTORY FETCHING & NORMALIZATION
+    // =========================================================================
+    async function fetchInventory() {
+      const isFirstLoad = !hasLoadedInventoryOnce;
+      if (isFirstLoad) {
+        document.getElementById("loadingSpinner").classList.remove("hidden");
+        document.getElementById("tableContainer").classList.add("hidden");
+      } else {
+        showTopProgress();
+      }
+
+      try {
+        const { data, error } = await supabaseClient
+          .from('bottles')
+          .select('*, cellar_sections(id, name, color_code)')
+          .eq('is_archived', false)
+          .order('producer', { ascending: true });
+
+        if (error) throw error;
+
+        wineInventory = (data || []).map(w => ({
+          id: w.id,
+          producer: w.producer || '',
+          appellation: w.appellation || '',
+          vintage: w.vintage || 'NV',
+          region: w.region || '',
+          country: w.country || '',
+          category: w.category || 'Red Wine',
+          format: w.format || 750,
+          quantity: Number(w.quantity) || 0,
+          maturityStart: w.maturity_start || '',
+          maturityEnd: w.maturity_end || '',
+          price: w.price !== null ? w.price : '',
+          value: w.value !== null ? w.value : '',
+          section: w.section || (w.cellar_sections?.name) || '',
+          sectionId: w.section_id || '',
+          sectionColor: w.cellar_sections?.color_code || null,
+          dateAdded: w.date_added || '',
+          tastingNotes: w.tasting_notes || '',
+          personalNotes: w.personal_notes || '',
+          readiness: getReadiness({ maturityStart: w.maturity_start, maturityEnd: w.maturity_end })
+        }));
+
+        populateFilterDropdowns();
+        renderCellarSectionsGrid();
+        applyFilters();
+        hasLoadedInventoryOnce = true;
+      } catch (err) {
+        console.error("Failed to load inventory from Supabase:", err);
+        showToast("Error connecting to Supabase database", "error");
+      } finally {
+        if (isFirstLoad) {
+          document.getElementById("loadingSpinner").classList.add("hidden");
+          document.getElementById("tableContainer").classList.remove("hidden");
+        } else {
+          hideTopProgress();
+        }
+      }
+    }
+
+    // =========================================================================
+    // BADGES, READINESS & FORMATTING
+    // =========================================================================
     function getReadiness(wine) {
       const currentYear = new Date().getFullYear();
       const start = Number(wine.maturityStart);
@@ -558,7 +794,6 @@
       return `<span class="text-slate-400">—</span>`;
     }
 
-    // Category Color Badges
     function getCategoryBadge(category) {
       switch(category) {
         case 'Red Wine':
@@ -580,7 +815,6 @@
       }
     }
 
-    // Format Currency
     function formatCurrency(val) {
       if (val === undefined || val === null || val === '') return '—';
       const clean = val.toString().replace('$', '').trim();
@@ -593,9 +827,6 @@
       return Number(clean) || 0;
     }
 
-    // Fetch Inventory
-    // Brief bottom-of-screen confirmation toast — fixed position, never shifts layout.
-    // type: 'success' (emerald), 'error' (rose), or 'info' (slate, default).
     function showToast(message, type) {
       const container = document.getElementById("toastContainer");
       const styles = {
@@ -621,17 +852,16 @@
       }, 2600);
     }
 
-    // Slim, non-layout-shifting progress indicator for background saves/refreshes.
-    // Unlike the big spinner, this never hides or displaces the table underneath it.
     function showTopProgress() {
       const bar = document.getElementById("topProgressBar");
       bar.classList.remove("w-0", "opacity-0");
       bar.classList.add("opacity-100");
-      bar.style.width = "70%"; // eases toward 70% while the request is in flight
+      bar.style.width = "70%";
     }
+
     function hideTopProgress() {
       const bar = document.getElementById("topProgressBar");
-      bar.style.width = "100%"; // snaps to full width to signal completion
+      bar.style.width = "100%";
       setTimeout(() => {
         bar.classList.add("opacity-0");
         setTimeout(() => {
@@ -642,44 +872,9 @@
       }, 150);
     }
 
-    let hasLoadedInventoryOnce = false;
-
-    async function fetchInventory() {
-      // Only show the big, space-taking spinner on the very first load, when there's
-      // nothing on screen yet. Background refreshes (after add/edit/drink) keep the
-      // existing table visible and use the slim top progress bar instead, so the
-      // page doesn't jump or flash empty on every small change.
-      const isFirstLoad = !hasLoadedInventoryOnce;
-
-      if (isFirstLoad) {
-        document.getElementById("loadingSpinner").classList.remove("hidden");
-        document.getElementById("tableContainer").classList.add("hidden");
-      } else {
-        showTopProgress();
-      }
-
-      try {
-        const response = await fetch(API_URL);
-        wineInventory = await response.json();
-        
-        wineInventory.forEach(w => w.readiness = getReadiness(w));
-
-        populateFilterDropdowns();
-        applyFilters();
-        hasLoadedInventoryOnce = true;
-      } catch (err) {
-        console.error("Failed to load inventory:", err);
-      } finally {
-        if (isFirstLoad) {
-          document.getElementById("loadingSpinner").classList.add("hidden");
-          document.getElementById("tableContainer").classList.remove("hidden");
-        } else {
-          hideTopProgress();
-        }
-      }
-    }
-
-    // Filter Menu & Logic
+    // =========================================================================
+    // FILTERS LOGIC
+    // =========================================================================
     function toggleFilterDrawer() {
       const drawer = document.getElementById("filterDrawer");
       const btn = document.getElementById("filtersToggleBtn");
@@ -695,28 +890,6 @@
       }
     }
 
-    // Active filter selections, keyed by filter group id, each holding a Set of selected values
-    const activeFilterSelections = {
-      filterCategory: new Set(),
-      filterReadiness: new Set(),
-      filterCountry: new Set(),
-      filterRegion: new Set(),
-      filterVintage: new Set()
-    };
-
-    const FILTER_GROUP_LABELS = {
-      filterCategory: "Category / Style",
-      filterReadiness: "Readiness",
-      filterCountry: "Country",
-      filterRegion: "Region",
-      filterVintage: "Vintage"
-    };
-
-    const STATIC_FILTER_OPTIONS = {
-      filterCategory: ["Red Wine", "White Wine", "Sparkling Wine", "Rosé Wine", "Orange Wine", "Dessert Wine", "Fortified Wine"],
-      filterReadiness: ["Can Drink Now", "Hold", "Past Peak / Matured"]
-    };
-
     function populateFilterDropdowns() {
       const countries = [...new Set(wineInventory.map(w => w.country).filter(Boolean))].sort();
       const vintages = [...new Set(wineInventory.map(w => w.vintage).filter(Boolean))].sort((a,b) => b - a);
@@ -728,7 +901,6 @@
       renderRegionOptions();
     }
 
-    // Regions shown depend on selected Country/ies. Until a country is chosen, show nothing but a hint.
     function renderRegionOptions() {
       const countryFilter = activeFilterSelections.filterCountry;
       const container = document.getElementById("filterRegion");
@@ -744,7 +916,6 @@
       const pool = wineInventory.filter(w => countryFilter.has(String(w.country)));
       const regions = [...new Set(pool.map(w => w.region).filter(Boolean))].sort();
 
-      // Drop any active region selections that are no longer valid for the current country pool
       const validRegionSet = new Set(regions);
       Array.from(activeFilterSelections.filterRegion).forEach(r => {
         if (!validRegionSet.has(r)) activeFilterSelections.filterRegion.delete(r);
@@ -815,12 +986,15 @@
       document.getElementById("searchInput").value = "";
       document.getElementById("filterPriceMin").value = "";
       document.getElementById("filterPriceMax").value = "";
+      activeSectionFilter = null;
+      document.getElementById("activeSectionFilterBadge").innerText = "All Sections";
 
       Object.keys(activeFilterSelections).forEach(groupId => {
         activeFilterSelections[groupId].clear();
       });
       renderRegionOptions();
       Object.keys(activeFilterSelections).forEach(groupId => refreshFilterGroupDisplay(groupId));
+      renderCellarSectionsGrid();
       applyFilters();
     }
 
@@ -850,6 +1024,11 @@
       addChips("filterRegion", regionFilter);
       addChips("filterVintage", vintageFilter);
 
+      if (activeSectionFilter) {
+        const sec = cellarSections.find(s => s.id === activeSectionFilter);
+        chipsHtml += createChipCustom(`Section: ${sec ? sec.name : activeSectionFilter}`, "filterBySection(null)");
+      }
+
       if (minPriceRaw !== "" && !isNaN(minPrice)) chipsHtml += createChipCustom(`Min Price: $${minPrice}`, "clearPriceFilter('min')");
       if (maxPriceRaw !== "" && !isNaN(maxPrice)) chipsHtml += createChipCustom(`Max Price: $${maxPrice}`, "clearPriceFilter('max')");
 
@@ -863,10 +1042,8 @@
 
       const filtered = wineInventory.filter(w => {
         const winePrice = parseNumericPrice(w.price);
-
-        // Accent-insensitive search across columns B–G (country, region, appellation, producer,
-        // vintage, category) plus Personal Notes (column Q)
         const normalizedSearch = normalizeStr(search);
+
         const matchesSearch = !normalizedSearch ||
           normalizeStr(w.country).includes(normalizedSearch) ||
           normalizeStr(w.region).includes(normalizedSearch) ||
@@ -881,11 +1058,12 @@
         const matchesCountry = isMatchMulti(countryFilter, w.country);
         const matchesRegion = isMatchMulti(regionFilter, w.region);
         const matchesVintage = isMatchMulti(vintageFilter, w.vintage);
+        const matchesSection = !activeSectionFilter || w.sectionId === activeSectionFilter;
 
         const matchesMinPrice = isNaN(minPrice) || winePrice >= minPrice;
         const matchesMaxPrice = isNaN(maxPrice) || winePrice <= maxPrice;
 
-        return matchesSearch && matchesCat && matchesRead && matchesCountry && matchesRegion && matchesVintage && matchesMinPrice && matchesMaxPrice;
+        return matchesSearch && matchesCat && matchesRead && matchesCountry && matchesRegion && matchesVintage && matchesSection && matchesMinPrice && matchesMaxPrice;
       });
 
       renderTable(filtered);
@@ -915,7 +1093,6 @@
       </span>`;
     }
 
-    // Helper to strip accents for clean alphabetical sorting
     function normalizeStr(str) {
       return String(str || '')
         .normalize("NFD")
@@ -923,26 +1100,12 @@
         .toLowerCase();
     }
 
-    // Renders tasting note text as safe HTML, turning **Section Titles** into bold text.
-    // Escapes everything else first since this text originates from an external API call.
-    function renderTastingNoteHtml(rawText) {
-      const escapeHtml = (str) => String(str)
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;");
-
-      const escaped = escapeHtml(rawText);
-      return escaped.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
-    }
-
-    // Extracts just the first word of a normalized string, for "first letter of first word" sorting
     function firstWord(str) {
       const normalized = normalizeStr(str).trim();
       if (!normalized) return '';
       return normalized.split(/\s+/)[0];
     }
 
-    // Sort Table Accent-Insensitive, Alphabetical Columns Compared by First Word Only
     function sortTable(column) {
       if (sortColumn === column) {
         sortAscending = !sortAscending;
@@ -952,14 +1115,12 @@
       }
 
       wineInventory.sort((a, b) => {
-        // Numeric comparison for numeric fields
         if (column === 'vintage' || column === 'quantity' || column === 'price' || column === 'value' || column === 'format') {
           let numA = parseNumericPrice(a[column]);
           let numB = parseNumericPrice(b[column]);
           return sortAscending ? numA - numB : numB - numA;
         }
 
-        // Text fields: compare by first word only
         let valA = firstWord(a[column]);
         let valB = firstWord(b[column]);
 
@@ -971,7 +1132,9 @@
       applyFilters();
     }
 
-    // Render Table & Header Valuation Stats
+    // =========================================================================
+    // RENDER TABLE
+    // =========================================================================
     function renderTable(data) {
       const tbody = document.getElementById("wineTableBody");
       
@@ -986,24 +1149,32 @@
         return;
       }
 
-      tbody.innerHTML = data.map(wine => `
-        <tr onclick="openBottleDetails('${wine.id}')" class="hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer transition">
-          <td class="px-4 py-3 font-bold text-slate-900 dark:text-white">${wine.producer}</td>
-          <td class="px-4 py-3 font-bold text-slate-900 dark:text-white">${wine.appellation || '—'}</td>
-          <td class="px-4 py-3 font-bold text-slate-900 dark:text-white">${wine.vintage || 'NV'}</td>
-          <td class="px-4 py-3">${wine.region ? wine.region + ', ' : ''}${wine.country}</td>
-          <td class="px-4 py-3">${getCategoryBadge(wine.category)}</td>
-          <td class="px-4 py-3 text-slate-500">${wine.format ? wine.format + ' mL' : '—'}</td>
-          <td class="px-4 py-3 text-xs">${wine.maturityStart && wine.maturityEnd ? wine.maturityStart + '–' + wine.maturityEnd : '—'}</td>
-          <td class="px-4 py-3">${getReadinessBadge(wine.readiness)}</td>
-          <td class="px-4 py-3">${formatCurrency(wine.price)} / ${formatCurrency(wine.value)}</td>
-          <td class="px-4 py-3 font-bold ${wine.quantity > 0 ? 'text-rose-600 dark:text-rose-400' : 'text-slate-400'}">${wine.quantity}</td>
-          <td class="px-4 py-3 text-xs text-slate-500">${wine.section || '—'}</td>
-        </tr>
-      `).join('');
+      tbody.innerHTML = data.map(wine => {
+        const sectionBadge = wine.sectionColor 
+          ? `<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[10px] font-medium border" style="border-color:${wine.sectionColor}40; background-color:${wine.sectionColor}15; color:${wine.sectionColor};"><span class="w-1.5 h-1.5 rounded-full" style="background-color:${wine.sectionColor};"></span>${wine.section}</span>`
+          : (wine.section || '—');
+
+        return `
+          <tr onclick="openBottleDetails('${wine.id}')" class="hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer transition">
+            <td class="px-4 py-3 font-bold text-slate-900 dark:text-white">${wine.producer}</td>
+            <td class="px-4 py-3 font-bold text-slate-900 dark:text-white">${wine.appellation || '—'}</td>
+            <td class="px-4 py-3 font-bold text-slate-900 dark:text-white">${wine.vintage || 'NV'}</td>
+            <td class="px-4 py-3">${wine.region ? wine.region + ', ' : ''}${wine.country}</td>
+            <td class="px-4 py-3">${getCategoryBadge(wine.category)}</td>
+            <td class="px-4 py-3 text-slate-500">${wine.format ? wine.format + ' mL' : '—'}</td>
+            <td class="px-4 py-3 text-xs">${wine.maturityStart && wine.maturityEnd ? wine.maturityStart + '–' + wine.maturityEnd : '—'}</td>
+            <td class="px-4 py-3">${getReadinessBadge(wine.readiness)}</td>
+            <td class="px-4 py-3">${formatCurrency(wine.price)} / ${formatCurrency(wine.value)}</td>
+            <td class="px-4 py-3 font-bold ${wine.quantity > 0 ? 'text-rose-600 dark:text-rose-400' : 'text-slate-400'}">${wine.quantity}</td>
+            <td class="px-4 py-3 text-xs">${sectionBadge}</td>
+          </tr>
+        `;
+      }).join('');
     }
 
-    // Open Read Details Modal
+    // =========================================================================
+    // BOTTLE DETAILS MODAL
+    // =========================================================================
     function openBottleDetails(id) {
       currentSelectedBottle = wineInventory.find(w => w.id === id);
       if (!currentSelectedBottle) return;
@@ -1027,7 +1198,7 @@
         <div class="bg-slate-50 dark:bg-slate-800 p-2.5 rounded-xl flex justify-between items-center">
           <div>
             <span class="text-slate-400 block text-[10px]">Maturity</span>
-            <span class="font-semibold">${currentSelectedBottle.maturityStart} – ${currentSelectedBottle.maturityEnd}</span>
+            <span class="font-semibold">${currentSelectedBottle.maturityStart && currentSelectedBottle.maturityEnd ? currentSelectedBottle.maturityStart + ' – ' + currentSelectedBottle.maturityEnd : '—'}</span>
           </div>
           <button id="btnEstimateMaturity" onclick="estimateDrinkingWindow()" class="px-2 py-1 bg-indigo-100 text-indigo-700 dark:bg-indigo-950/80 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 rounded-lg text-[10px] font-semibold hover:bg-indigo-200 transition flex items-center gap-1 shrink-0">
             <i data-lucide="sparkles" class="w-3 h-3"></i> Estimate
@@ -1043,18 +1214,19 @@
             <i data-lucide="sparkles" class="w-3 h-3"></i> Estimate
           </button>
         </div>
-        <div class="col-span-2 bg-slate-50 dark:bg-slate-800 p-2.5 rounded-xl flex justify-between items-center"><span class="text-slate-400 text-[10px]">Cellar Location</span><span class="font-semibold font-mono text-sm">${currentSelectedBottle.section || '—'}</span></div>
+        <div class="col-span-2 bg-slate-50 dark:bg-slate-800 p-2.5 rounded-xl flex justify-between items-center">
+          <span class="text-slate-400 text-[10px]">Cellar Location</span>
+          <span class="font-semibold font-mono text-sm">${currentSelectedBottle.section || '—'}</span>
+        </div>
       `;
 
-      // Personal Notes (Column Q) — small free-text box, not shown in the main listing
       document.getElementById("personalNotesInput").value = currentSelectedBottle.personalNotes || "";
 
-      // WSET Tasting Notes
       const notesElem = document.getElementById("tastingNotesText");
       if (currentSelectedBottle.tastingNotes) {
         notesElem.innerHTML = renderTastingNoteHtml(currentSelectedBottle.tastingNotes);
       } else {
-        notesElem.innerText = "No tasting notes generated yet. Click generate to construct a full WSET SAT analysis saved directly to your Google Sheet.";
+        notesElem.innerText = "No tasting notes generated yet. Click generate to construct a full WSET SAT analysis saved directly to Supabase.";
       }
 
       disableEditMode();
@@ -1062,7 +1234,34 @@
       document.getElementById("bottleModal").classList.remove("hidden");
     }
 
-    // Tasting Note Generation via Gemini (columns B–H), saved server-side to Column P
+    function renderTastingNoteHtml(rawText) {
+      const escapeHtml = (str) => String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+      return escapeHtml(rawText).replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+    }
+
+    // =========================================================================
+    // AI ENRICHMENT (CLOUDFLARE PAGES /api RELAY)
+    // =========================================================================
+    async function sendAiRequest(actionType, dataPayload) {
+      showTopProgress();
+      try {
+        const response = await fetch(AI_API_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: actionType, data: dataPayload })
+        });
+        return await response.json();
+      } catch (err) {
+        console.error("AI Request error:", err);
+        return { status: "error", message: err.toString() };
+      } finally {
+        hideTopProgress();
+      }
+    }
+
     async function generateWSETTastingNotes() {
       if (!currentSelectedBottle) return;
       const btn = document.getElementById("btnGenNotes");
@@ -1074,20 +1273,23 @@
       lucide.createIcons();
 
       try {
-        // skipRefresh=true: GENERATE_NOTE already saves column P server-side; a full
-        // inventory refresh isn't needed to display the result.
-        const result = await sendPostRequest("GENERATE_NOTE", currentSelectedBottle, true);
+        const result = await sendAiRequest("GENERATE_NOTE", currentSelectedBottle);
 
         if (result && result.status === "success" && result.note) {
           currentSelectedBottle.tastingNotes = result.note;
           notesElem.innerHTML = renderTastingNoteHtml(result.note);
+
+          // Save note directly to Supabase
+          await supabaseClient
+            .from('bottles')
+            .update({ tasting_notes: result.note, updated_at: new Date().toISOString() })
+            .eq('id', currentSelectedBottle.id);
+
           btn.innerHTML = `<i data-lucide="check" class="w-3 h-3"></i> Saved!`;
-          lucide.createIcons();
+          showToast("Tasting note saved to Supabase", "success");
         } else {
-          const reason = (result && result.message) ? result.message : "Unknown error";
-          alert(`Gemini could not generate a tasting note for this bottle.\n\nReason: ${reason}`);
+          alert(`Gemini could not generate a tasting note.\n\nReason: ${(result && result.message) || "Unknown error"}`);
           btn.innerHTML = originalBtnHtml;
-          lucide.createIcons();
         }
       } finally {
         setTimeout(() => {
@@ -1098,26 +1300,28 @@
       }
     }
 
-    // Personal Notes — saved quietly on blur via MODIFY, only when the text actually changed
     async function savePersonalNotes() {
       if (!currentSelectedBottle) return;
       const newValue = document.getElementById("personalNotesInput").value;
-      if (newValue === (currentSelectedBottle.personalNotes || "")) return; // no change, skip the write
+      if (newValue === (currentSelectedBottle.personalNotes || "")) return;
 
       currentSelectedBottle.personalNotes = newValue;
-      await sendPostRequest("MODIFY", currentSelectedBottle, true);
+      const { error } = await supabaseClient
+        .from('bottles')
+        .update({ personal_notes: newValue, updated_at: new Date().toISOString() })
+        .eq('id', currentSelectedBottle.id);
+
+      if (!error) {
+        showToast("Personal note saved", "success");
+      }
     }
 
-    // Clicking the header wine logo spins it like a roulette wheel, then opens a
-    // randomly selected bottle from the current inventory.
     function spinForRandomBottle() {
       if (!wineInventory || wineInventory.length === 0) return;
-
       const logo = document.getElementById("randomBottleLogo");
-      if (logo.classList.contains("roulette-spinning")) return; // already spinning, ignore repeat clicks
+      if (logo.classList.contains("roulette-spinning")) return;
 
       logo.classList.add("roulette-spinning");
-
       setTimeout(() => {
         logo.classList.remove("roulette-spinning");
         const randomBottle = wineInventory[Math.floor(Math.random() * wineInventory.length)];
@@ -1125,10 +1329,8 @@
       }, 1200);
     }
 
-    // Market Value Estimation via Gemini (columns D–H: appellation, producer, vintage, category, format)
     async function estimateMarketValue() {
       if (!currentSelectedBottle) return;
-
       const btn = document.getElementById("btnEstimateValue");
       const originalBtnHtml = btn ? btn.innerHTML : null;
       if (btn) {
@@ -1138,15 +1340,13 @@
       }
 
       try {
-        const result = await sendPostRequest("ESTIMATE_VALUE", currentSelectedBottle, true);
-
+        const result = await sendAiRequest("ESTIMATE_VALUE", currentSelectedBottle);
         if (result && result.status === "success" && result.value) {
           tempEstimatedValue = result.value.toString().trim();
-          document.getElementById("estimatedValueDisplay").innerText = tempEstimatedValue;
+          document.getElementById("estimatedValueDisplay").innerText = `$${tempEstimatedValue}`;
           document.getElementById("valueConfirmModal").classList.remove("hidden");
         } else {
-          const reason = (result && result.message) ? result.message : "Unknown error";
-          alert(`Gemini could not produce a valuation for this bottle.\n\nReason: ${reason}`);
+          alert(`Gemini could not estimate value.\n\nReason: ${(result && result.message) || "Unknown error"}`);
         }
       } finally {
         if (btn) {
@@ -1159,19 +1359,23 @@
 
     async function acceptEstimatedValue() {
       if (currentSelectedBottle && tempEstimatedValue) {
-        currentSelectedBottle.value = tempEstimatedValue;
+        const numericVal = parseNumericPrice(tempEstimatedValue);
+        currentSelectedBottle.value = numericVal;
         closeModal("valueConfirmModal");
+
+        await supabaseClient
+          .from('bottles')
+          .update({ value: numericVal, updated_at: new Date().toISOString() })
+          .eq('id', currentSelectedBottle.id);
+
+        showToast("Market valuation updated", "success");
+        await fetchInventory();
         openBottleDetails(currentSelectedBottle.id);
-        await sendPostRequest("MODIFY", currentSelectedBottle);
       }
     }
 
-    // Drinking Window Estimation via Gemini (columns B–H: country, region, appellation,
-    // producer, vintage, category, format). Same low-temperature/median approach as
-    // Market Value estimation, to minimize random variation between requests.
     async function estimateDrinkingWindow() {
       if (!currentSelectedBottle) return;
-
       const btn = document.getElementById("btnEstimateMaturity");
       const originalBtnHtml = btn ? btn.innerHTML : null;
       if (btn) {
@@ -1181,15 +1385,13 @@
       }
 
       try {
-        const result = await sendPostRequest("ESTIMATE_MATURITY", currentSelectedBottle, true);
-
+        const result = await sendAiRequest("ESTIMATE_MATURITY", currentSelectedBottle);
         if (result && result.status === "success" && result.maturityStart && result.maturityEnd) {
           tempEstimatedMaturity = { start: result.maturityStart, end: result.maturityEnd };
           document.getElementById("estimatedMaturityDisplay").innerText = `${result.maturityStart} – ${result.maturityEnd}`;
           document.getElementById("maturityConfirmModal").classList.remove("hidden");
         } else {
-          const reason = (result && result.message) ? result.message : "Unknown error";
-          alert(`Gemini could not produce a drinking window for this bottle.\n\nReason: ${reason}`);
+          alert(`Gemini could not estimate drinking window.\n\nReason: ${(result && result.message) || "Unknown error"}`);
         }
       } finally {
         if (btn) {
@@ -1202,15 +1404,29 @@
 
     async function acceptEstimatedMaturity() {
       if (currentSelectedBottle && tempEstimatedMaturity.start && tempEstimatedMaturity.end) {
-        currentSelectedBottle.maturityStart = tempEstimatedMaturity.start; // Column I
-        currentSelectedBottle.maturityEnd = tempEstimatedMaturity.end;     // Column J
+        const mStart = parseInt(tempEstimatedMaturity.start, 10);
+        const mEnd = parseInt(tempEstimatedMaturity.end, 10);
+
         closeModal("maturityConfirmModal");
+
+        await supabaseClient
+          .from('bottles')
+          .update({
+            maturity_start: mStart,
+            maturity_end: mEnd,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', currentSelectedBottle.id);
+
+        showToast("Drinking window saved", "success");
+        await fetchInventory();
         openBottleDetails(currentSelectedBottle.id);
-        await sendPostRequest("MODIFY", currentSelectedBottle);
       }
     }
 
-    // Toggle Edit Mode
+    // =========================================================================
+    // EDIT & MODIFY BOTTLE
+    // =========================================================================
     function enableEditMode() {
       const w = currentSelectedBottle;
       document.getElementById("editId").value = w.id;
@@ -1220,14 +1436,14 @@
       document.getElementById("editRegion").value = w.region;
       document.getElementById("editCategory").value = w.category;
       document.getElementById("editCountry").value = w.country;
-      document.getElementById("editFormat").value = w.format ? w.format.toString().replace(/mL|ML/g, '').trim() : '';
+      document.getElementById("editFormat").value = w.format || 750;
       document.getElementById("editQuantity").value = w.quantity;
-      document.getElementById("editMaturityStart").value = w.maturityStart;
-      document.getElementById("editMaturityEnd").value = w.maturityEnd;
-      document.getElementById("editPrice").value = w.price ? w.price.toString().replace('$','').trim() : '';
-      document.getElementById("editValue").value = w.value ? w.value.toString().replace('$','').trim() : '';
+      document.getElementById("editMaturityStart").value = w.maturityStart || '';
+      document.getElementById("editMaturityEnd").value = w.maturityEnd || '';
+      document.getElementById("editPrice").value = w.price !== '' ? w.price : '';
+      document.getElementById("editValue").value = w.value !== '' ? w.value : '';
       document.getElementById("editDateAdded").value = w.dateAdded || '';
-      document.getElementById("editSection").value = w.section;
+      document.getElementById("editSectionSelect").value = w.sectionId || '';
 
       document.getElementById("modalReadView").classList.add("hidden");
       document.getElementById("editForm").classList.remove("hidden");
@@ -1238,42 +1454,48 @@
       document.getElementById("editForm").classList.add("hidden");
     }
 
-    // Save Modified Bottle
     async function saveModifiedBottle(e) {
       e.preventDefault();
-      const updatedBottle = {
-        id: document.getElementById("editId").value,
-        producer: document.getElementById("editProducer").value,
-        appellation: document.getElementById("editAppellation").value,
-        vintage: document.getElementById("editVintage").value,
-        region: document.getElementById("editRegion").value,
+      const id = document.getElementById("editId").value;
+      const chosenSectionId = document.getElementById("editSectionSelect").value || null;
+      const chosenSectionObj = cellarSections.find(s => s.id === chosenSectionId);
+
+      const updatedPayload = {
+        producer: document.getElementById("editProducer").value.trim(),
+        appellation: document.getElementById("editAppellation").value.trim(),
+        vintage: document.getElementById("editVintage").value.trim(),
+        region: document.getElementById("editRegion").value.trim(),
         category: document.getElementById("editCategory").value,
-        country: document.getElementById("editCountry").value,
-        format: document.getElementById("editFormat").value,
-        quantity: Number(document.getElementById("editQuantity").value),
-        maturityStart: document.getElementById("editMaturityStart").value,
-        maturityEnd: document.getElementById("editMaturityEnd").value,
-        price: document.getElementById("editPrice").value,
-        value: document.getElementById("editValue").value,
-        dateAdded: document.getElementById("editDateAdded").value,
-        section: document.getElementById("editSection").value,
-        tastingNotes: currentSelectedBottle ? currentSelectedBottle.tastingNotes : "",
-        personalNotes: currentSelectedBottle ? currentSelectedBottle.personalNotes : ""
+        country: document.getElementById("editCountry").value.trim(),
+        format: Number(document.getElementById("editFormat").value) || 750,
+        quantity: Number(document.getElementById("editQuantity").value) || 0,
+        maturity_start: parseInt(document.getElementById("editMaturityStart").value, 10) || null,
+        maturity_end: parseInt(document.getElementById("editMaturityEnd").value, 10) || null,
+        price: parseNumericPrice(document.getElementById("editPrice").value),
+        value: parseNumericPrice(document.getElementById("editValue").value),
+        section_id: chosenSectionId,
+        section: chosenSectionObj ? chosenSectionObj.name : '',
+        date_added: document.getElementById("editDateAdded").value || null,
+        updated_at: new Date().toISOString()
       };
 
       closeModal("bottleModal");
-      const result = await sendPostRequest("MODIFY", updatedBottle);
-      if (result && result.status === "success") {
-        showToast("Changes saved", "success");
+      showTopProgress();
+
+      const { error } = await supabaseClient.from('bottles').update(updatedPayload).eq('id', id);
+
+      if (!error) {
+        showToast("Changes saved to Supabase", "success");
+        await fetchInventory();
       } else {
-        showToast((result && result.message) ? result.message : "Couldn't save changes", "error");
+        showToast(error.message || "Couldn't save changes", "error");
+        hideTopProgress();
       }
     }
 
-    // Drink / Remove Wine — opens a styled confirmation modal with a quantity stepper
-    // (≤ current stock). Confirming archives that quantity (full row A-P + Date Removed)
-    // to the Archives sheet, decrements Inventory by that amount, and removes the
-    // Inventory row once it reaches 0.
+    // =========================================================================
+    // DRINK / REMOVE BOTTLE
+    // =========================================================================
     function consumeBottle() {
       if (!currentSelectedBottle || currentSelectedBottle.quantity <= 0) return;
 
@@ -1301,7 +1523,7 @@
       const qtyInput = document.getElementById("drinkQuantityInput");
       const stock = currentSelectedBottle ? currentSelectedBottle.quantity : 1;
       let value = parseInt(qtyInput.value, 10);
-      if (isNaN(value)) return; // let them keep typing without fighting the field
+      if (isNaN(value)) return;
       if (value > stock) qtyInput.value = stock;
       if (value < 1) qtyInput.value = 1;
       document.getElementById("drinkConfirmError").classList.add("hidden");
@@ -1327,19 +1549,57 @@
 
       closeModal("drinkConfirmModal");
       closeModal("bottleModal");
-      const result = await sendPostRequest("DRINK", { ...currentSelectedBottle, drinkQuantity: qtyToRemove });
-      if (result && result.status === "success") {
-        showToast(`Removed ${qtyToRemove} bottle${qtyToRemove !== 1 ? 's' : ''} from the cellar`, "success");
+      showTopProgress();
+
+      const today = new Date().toISOString().split('T')[0];
+
+      if (stock - qtyToRemove <= 0) {
+        // Bottle depleted: mark archived and stamp date_removed
+        const { error } = await supabaseClient
+          .from('bottles')
+          .update({
+            quantity: 0,
+            is_archived: true,
+            date_removed: today,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', currentSelectedBottle.id);
+
+        if (!error) {
+          showToast(`Archived ${currentSelectedBottle.producer}`, "success");
+          await fetchInventory();
+        } else {
+          showToast(error.message || "Couldn't remove bottle", "error");
+          hideTopProgress();
+        }
       } else {
-        showToast((result && result.message) ? result.message : "Couldn't remove bottle", "error");
+        // Partially drank: decrement quantity in place
+        const { error } = await supabaseClient
+          .from('bottles')
+          .update({
+            quantity: stock - qtyToRemove,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', currentSelectedBottle.id);
+
+        if (!error) {
+          showToast(`Removed ${qtyToRemove} bottle${qtyToRemove !== 1 ? 's' : ''}`, "success");
+          await fetchInventory();
+        } else {
+          showToast(error.message || "Couldn't update quantity", "error");
+          hideTopProgress();
+        }
       }
     }
 
-    // Add New Bottle Modal
+    // =========================================================================
+    // ADD BOTTLE
+    // =========================================================================
     function openAddModal(options) {
       if (!options || !options.preserveValues) {
         document.getElementById("addWineForm").reset();
         document.getElementById("addQuantity").value = 1;
+        document.getElementById("addFormat").value = 750;
       }
       document.getElementById("addFormValidationMsg").classList.add("hidden");
       document.getElementById("addModal").classList.remove("hidden");
@@ -1367,57 +1627,47 @@
       }
       validationMsg.classList.add("hidden");
 
-      const newWine = {
+      const chosenSectionId = document.getElementById("addSectionSelect").value || null;
+      const chosenSectionObj = cellarSections.find(s => s.id === chosenSectionId);
+
+      const newBottle = {
         producer: producer,
-        appellation: document.getElementById("addAppellation").value,
+        appellation: document.getElementById("addAppellation").value.trim(),
         vintage: vintage,
-        region: document.getElementById("addRegion").value,
+        region: document.getElementById("addRegion").value.trim(),
         category: document.getElementById("addCategory").value,
-        country: document.getElementById("addCountry").value,
-        format: format,
-        quantity: Number(quantity),
-        maturityStart: document.getElementById("addMaturityStart").value,
-        maturityEnd: document.getElementById("addMaturityEnd").value,
-        price: document.getElementById("addPrice").value,
-        value: document.getElementById("addValue").value,
-        section: document.getElementById("addSection").value,
-        tastingNotes: ""
+        country: document.getElementById("addCountry").value.trim(),
+        format: Number(format) || 750,
+        quantity: Number(quantity) || 1,
+        maturity_start: parseInt(document.getElementById("addMaturityStart").value, 10) || null,
+        maturity_end: parseInt(document.getElementById("addMaturityEnd").value, 10) || null,
+        price: parseNumericPrice(document.getElementById("addPrice").value),
+        value: parseNumericPrice(document.getElementById("addValue").value),
+        section_id: chosenSectionId,
+        section: chosenSectionObj ? chosenSectionObj.name : '',
+        is_archived: false,
+        date_added: new Date().toISOString().split('T')[0]
       };
 
       closeModal("addModal");
-      const result = await sendPostRequest("ADD", newWine);
-      if (result && result.status === "success") {
-        showToast(`${producer} added to the cellar`, "success");
-      } else {
-        showToast((result && result.message) ? result.message : "Couldn't add bottle", "error");
-      }
-    }
-
-    // Send POST payload to Apps Script API. Returns the parsed JSON response.
-    // Pass skipRefresh=true for read-only calls (e.g. AI estimates) that don't change the sheet data.
-    async function sendPostRequest(actionType, dataPayload, skipRefresh) {
       showTopProgress();
-      try {
-        const response = await fetch(API_URL, {
-          method: "POST",
-          headers: { "Content-Type": "text/plain" },
-          body: JSON.stringify({ action: actionType, data: dataPayload })
-        });
-        const result = await response.json();
-        if (!skipRefresh) {
-          await fetchInventory(); // fetchInventory manages its own progress indicator from here
-        }
-        return result;
-      } catch (err) {
-        console.error("Save error:", err);
-        return { status: "error", message: err.toString() };
-      } finally {
-        if (skipRefresh) hideTopProgress(); // fetchInventory already hides it otherwise
+
+      const { error } = await supabaseClient.from('bottles').insert([newBottle]);
+
+      if (!error) {
+        showToast(`${producer} added to the cellar`, "success");
+        await fetchInventory();
+      } else {
+        showToast(error.message || "Couldn't add bottle", "error");
+        hideTopProgress();
       }
     }
 
-    // Label Scanner Camera Reader — sends the photo to Gemini for real extraction of
-    // columns B–H, then pre-fills the Add Bottle form for the user to confirm/edit/save.
+    // =========================================================================
+    // LABEL SCANNER (GEMINI MULTIMODAL)
+    // =========================================================================
+    function openScanModal() { document.getElementById("scanModal").classList.remove("hidden"); }
+
     async function processLabelImage(event) {
       const file = event.target.files[0];
       if (!file) return;
@@ -1428,15 +1678,15 @@
       try {
         const base64Data = await new Promise((resolve, reject) => {
           const reader = new FileReader();
-          reader.onload = () => resolve(reader.result.split(',')[1]); // strip "data:image/...;base64," prefix
+          reader.onload = () => resolve(reader.result.split(',')[1]);
           reader.onerror = reject;
           reader.readAsDataURL(file);
         });
 
-        const result = await sendPostRequest("SCAN_LABEL", {
+        const result = await sendAiRequest("SCAN_LABEL", {
           imageBase64: base64Data,
           imageMimeType: file.type || "image/jpeg"
-        }, true);
+        });
 
         if (result && result.status === "success" && result.data) {
           const extracted = result.data;
@@ -1445,105 +1695,28 @@
           document.getElementById("addAppellation").value = extracted.appellation || "";
           document.getElementById("addVintage").value = extracted.vintage || "";
           document.getElementById("addRegion").value = extracted.region || "";
-          document.getElementById("addCategory").value = extracted.category || "";
+          document.getElementById("addCategory").value = extracted.category || "Red Wine";
           document.getElementById("addCountry").value = extracted.country || "";
-          document.getElementById("addFormat").value = extracted.format || "";
+          document.getElementById("addFormat").value = extracted.format || 750;
           document.getElementById("addQuantity").value = 1;
 
           openAddModal({ preserveValues: true });
         } else {
-          const reason = (result && result.message) ? result.message : "Unknown error";
-          alert(`Gemini could not read this label.\n\nReason: ${reason}\n\nYou can still fill in the bottle details manually.`);
+          alert(`Gemini could not read this label.\n\nReason: ${(result && result.message) || "Unknown error"}\n\nYou can still add the bottle manually.`);
           openAddModal();
         }
       } catch (err) {
-        alert("Something went wrong reading the photo. Please try again.");
+        alert("Something went wrong processing the photo. Please try again.");
         console.error(err);
       } finally {
         hideTopProgress();
-        event.target.value = ""; // allow re-selecting the same file next time
+        event.target.value = "";
       }
     }
 
-    function openScanModal() { document.getElementById("scanModal").classList.remove("hidden"); }
-    function closeModal(id) { document.getElementById(id).classList.add("hidden"); }
-
-    // Cellar Statistics Dashboard Modal (Includes Format Counts)
-    function openStatsModal() {
-      const totalBottles = wineInventory.reduce((sum, w) => sum + (Number(w.quantity) || 0), 0);
-      const totalPaid = wineInventory.reduce((sum, w) => sum + (parseNumericPrice(w.price) * (Number(w.quantity) || 0)), 0);
-      const totalValue = wineInventory.reduce((sum, w) => sum + (parseNumericPrice(w.value) * (Number(w.quantity) || 0)), 0);
-      const avgPrice = totalBottles > 0 ? (totalPaid / totalBottles) : 0;
-
-      document.getElementById("statTotalBottles").innerText = totalBottles;
-      document.getElementById("statTotalPaid").innerText = `$${Math.round(totalPaid).toLocaleString()}`;
-      document.getElementById("statTotalValue").innerText = `$${Math.round(totalValue).toLocaleString()}`;
-      document.getElementById("statAvgPrice").innerText = `$${Math.round(avgPrice)}`;
-
-      // Category breakdown
-      const cats = {};
-      wineInventory.forEach(w => {
-        const qty = Number(w.quantity) || 0;
-        cats[w.category] = (cats[w.category] || 0) + qty;
-      });
-
-      const catBars = document.getElementById("statCategoryBars");
-      catBars.innerHTML = Object.entries(cats).map(([cat, qty]) => {
-        const pct = totalBottles > 0 ? Math.round((qty / totalBottles) * 100) : 0;
-        return `
-          <div>
-            <div class="flex justify-between font-semibold text-[11px] mb-0.5"><span>${cat}</span><span>${qty} btls (${pct}%)</span></div>
-            <div class="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
-              <div class="h-full bg-rose-500 rounded-full" style="width: ${pct}%"></div>
-            </div>
-          </div>
-        `;
-      }).join('');
-
-      // Readiness breakdown
-      const read = {};
-      wineInventory.forEach(w => {
-        const qty = Number(w.quantity) || 0;
-        read[w.readiness] = (read[w.readiness] || 0) + qty;
-      });
-
-      const readBars = document.getElementById("statReadinessBars");
-      readBars.innerHTML = Object.entries(read).map(([status, qty]) => {
-        const pct = totalBottles > 0 ? Math.round((qty / totalBottles) * 100) : 0;
-        const color = status === "Can Drink Now" ? "bg-emerald-500" : (status === "Hold" ? "bg-amber-500" : "bg-rose-500");
-        return `
-          <div>
-            <div class="flex justify-between font-semibold text-[11px] mb-0.5"><span>${status}</span><span>${qty} btls (${pct}%)</span></div>
-            <div class="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
-              <div class="h-full ${color} rounded-full" style="width: ${pct}%"></div>
-            </div>
-          </div>
-        `;
-      }).join('');
-
-      // Format breakdown
-      const formats = {};
-      wineInventory.forEach(w => {
-        const qty = Number(w.quantity) || 0;
-        const fmt = w.format ? `${w.format} mL` : 'Unspecified';
-        formats[fmt] = (formats[fmt] || 0) + qty;
-      });
-
-      const formatBars = document.getElementById("statFormatBars");
-      formatBars.innerHTML = Object.entries(formats).map(([fmt, qty]) => {
-        const pct = totalBottles > 0 ? Math.round((qty / totalBottles) * 100) : 0;
-        return `
-          <div class="bg-white dark:bg-slate-900 p-2 rounded-lg border border-slate-200 dark:border-slate-800 flex justify-between items-center">
-            <span class="font-bold text-slate-700 dark:text-slate-200">${fmt}</span>
-            <span class="font-mono text-indigo-600 dark:text-indigo-400 font-bold">${qty} btls (${pct}%)</span>
-          </div>
-        `;
-      }).join('');
-
-      document.getElementById("statsModal").classList.remove("hidden");
-    }
-
-    // Archives Dashboard — shows drank/removed wines, most recently removed first
+    // =========================================================================
+    // ARCHIVES MODAL (CONSUMED BOTTLES)
+    // =========================================================================
     let archiveInventory = [];
 
     async function openArchivesModal() {
@@ -1553,24 +1726,32 @@
       lucide.createIcons();
 
       try {
-        const response = await fetch(`${API_URL}?sheet=archives`);
-        archiveInventory = await response.json();
+        const { data, error } = await supabaseClient
+          .from('bottles')
+          .select('*, cellar_sections(name)')
+          .eq('is_archived', true)
+          .order('date_removed', { ascending: false });
 
-        archiveInventory.forEach(w => w.readiness = getReadiness(w));
+        if (error) throw error;
 
-        // Sort by Date Removed, most recent first
-        archiveInventory.sort((a, b) => new Date(b.dateRemoved) - new Date(a.dateRemoved));
+        archiveInventory = (data || []).map(w => ({
+          ...w,
+          maturityStart: w.maturity_start,
+          maturityEnd: w.maturity_end,
+          dateAdded: w.date_added,
+          dateRemoved: w.date_removed,
+          readiness: getReadiness({ maturityStart: w.maturity_start, maturityEnd: w.maturity_end })
+        }));
 
         renderArchivesTable(archiveInventory);
       } catch (err) {
-        console.error("Failed to load archives:", err);
+        console.error("Failed to load archives from Supabase:", err);
       } finally {
         document.getElementById("archivesLoadingSpinner").classList.add("hidden");
         document.getElementById("archivesTableContainer").classList.remove("hidden");
       }
     }
 
-    // Computes elapsed time between Date Added and Date Removed, formatted as "X years & Y months"
     function formatTimeInCellar(dateAddedStr, dateRemovedStr) {
       if (!dateAddedStr || !dateRemovedStr) return '—';
 
@@ -1598,7 +1779,7 @@
       const tbody = document.getElementById("archivesTableBody");
 
       if (data.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="11" class="py-8 text-center text-slate-400">No archived wines yet.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="12" class="py-8 text-center text-slate-400">No archived wines found in database.</td></tr>`;
         return;
       }
 
@@ -1621,6 +1802,82 @@
 
       lucide.createIcons();
     }
+
+    // =========================================================================
+    // STATS MODAL
+    // =========================================================================
+    function openStatsModal() {
+      const totalBottles = wineInventory.reduce((sum, w) => sum + (Number(w.quantity) || 0), 0);
+      const totalPaid = wineInventory.reduce((sum, w) => sum + (parseNumericPrice(w.price) * (Number(w.quantity) || 0)), 0);
+      const totalValue = wineInventory.reduce((sum, w) => sum + (parseNumericPrice(w.value) * (Number(w.quantity) || 0)), 0);
+      const avgPrice = totalBottles > 0 ? (totalPaid / totalBottles) : 0;
+
+      document.getElementById("statTotalBottles").innerText = totalBottles;
+      document.getElementById("statTotalPaid").innerText = `$${Math.round(totalPaid).toLocaleString()}`;
+      document.getElementById("statTotalValue").innerText = `$${Math.round(totalValue).toLocaleString()}`;
+      document.getElementById("statAvgPrice").innerText = `$${Math.round(avgPrice)}`;
+
+      const cats = {};
+      wineInventory.forEach(w => {
+        const qty = Number(w.quantity) || 0;
+        cats[w.category] = (cats[w.category] || 0) + qty;
+      });
+
+      const catBars = document.getElementById("statCategoryBars");
+      catBars.innerHTML = Object.entries(cats).map(([cat, qty]) => {
+        const pct = totalBottles > 0 ? Math.round((qty / totalBottles) * 100) : 0;
+        return `
+          <div>
+            <div class="flex justify-between font-semibold text-[11px] mb-0.5"><span>${cat}</span><span>${qty} btls (${pct}%)</span></div>
+            <div class="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+              <div class="h-full bg-rose-500 rounded-full" style="width: ${pct}%"></div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      const read = {};
+      wineInventory.forEach(w => {
+        const qty = Number(w.quantity) || 0;
+        read[w.readiness] = (read[w.readiness] || 0) + qty;
+      });
+
+      const readBars = document.getElementById("statReadinessBars");
+      readBars.innerHTML = Object.entries(read).map(([status, qty]) => {
+        const pct = totalBottles > 0 ? Math.round((qty / totalBottles) * 100) : 0;
+        const color = status === "Can Drink Now" ? "bg-emerald-500" : (status === "Hold" ? "bg-amber-500" : "bg-rose-500");
+        return `
+          <div>
+            <div class="flex justify-between font-semibold text-[11px] mb-0.5"><span>${status}</span><span>${qty} btls (${pct}%)</span></div>
+            <div class="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+              <div class="h-full ${color} rounded-full" style="width: ${pct}%"></div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      const formats = {};
+      wineInventory.forEach(w => {
+        const qty = Number(w.quantity) || 0;
+        const fmt = w.format ? `${w.format} mL` : 'Unspecified';
+        formats[fmt] = (formats[fmt] || 0) + qty;
+      });
+
+      const formatBars = document.getElementById("statFormatBars");
+      formatBars.innerHTML = Object.entries(formats).map(([fmt, qty]) => {
+        const pct = totalBottles > 0 ? Math.round((qty / totalBottles) * 100) : 0;
+        return `
+          <div class="bg-white dark:bg-slate-900 p-2 rounded-lg border border-slate-200 dark:border-slate-800 flex justify-between items-center">
+            <span class="font-bold text-slate-700 dark:text-slate-200">${fmt}</span>
+            <span class="font-mono text-indigo-600 dark:text-indigo-400 font-bold">${qty} btls (${pct}%)</span>
+          </div>
+        `;
+      }).join('');
+
+      document.getElementById("statsModal").classList.remove("hidden");
+    }
+
+    function closeModal(id) { document.getElementById(id).classList.add("hidden"); }
   </script>
 </body>
 </html>
