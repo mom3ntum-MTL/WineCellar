@@ -1,161 +1,53 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Wine Cellars Hub</title>
-
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="theme-color" content="#f8fafc">
-
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: { extend: {} }
-    }
-  </script>
-  <script src="https://unpkg.com/lucide@latest"></script>
-
-  <style>
-    body {
-      background-color: #f8fafc;
-      color: #0f172a;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    }
-    html.dark body {
-      background-color: #0b0f19;
-      color: #f1f5f9;
-    }
-    .glass-card {
-      background: rgba(255, 255, 255, 0.75);
-      backdrop-filter: blur(12px);
-      border: 1px solid rgba(15, 23, 42, 0.08);
-      transition: all 0.2s ease-in-out;
-    }
-    .glass-card:hover {
-      border-color: rgba(225, 29, 72, 0.4);
-      transform: translateY(-2px);
-    }
-    html.dark .glass-card {
-      background: rgba(22, 30, 46, 0.7);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-    }
-  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#15171c">
+  <title>my little Cellar</title>
+  <link rel="stylesheet" href="./css/style.css">
 </head>
-<body class="min-h-screen flex flex-col justify-between antialiased">
-
-  <header class="border-b border-slate-200 dark:border-slate-800/80 bg-white/70 dark:bg-slate-900/60 backdrop-blur-md px-4 py-4">
-    <div class="max-w-4xl mx-auto flex items-center space-x-3">
-      <div class="p-2.5 bg-rose-100 dark:bg-rose-950/80 border border-rose-300 dark:border-rose-500/30 rounded-2xl text-rose-600 dark:text-rose-500">
-        <i data-lucide="wine" class="w-6 h-6"></i>
+<body>
+  <main class="shell">
+    <div class="brand"><span class="brand-mark" aria-hidden="true">◈</span><span>my little <strong>Cellar</strong></span></div>
+    <section id="auth-view" class="card auth-card" aria-labelledby="auth-title">
+      <p class="eyebrow">A PRIVATE PLACE FOR GREAT WINES</p>
+      <h1 id="auth-title">Welcome to your cellar.</h1>
+      <p class="muted">Sign in to explore your collection, wherever it lives.</p>
+      <form id="auth-form" autocomplete="on">
+        <label for="email">Email address</label><input id="email" name="email" type="email" placeholder="you@example.com" autocomplete="email" required>
+        <label for="password" id="password-label">Password</label><input id="password" name="password" type="password" minlength="6" autocomplete="current-password" required>
+        <button id="auth-submit" class="primary" type="submit">Sign in</button>
+      </form>
+      <div class="auth-links"><button id="mode-signup" class="link" type="button">Create account</button><button id="mode-reset" class="link" type="button">Forgot password?</button></div>
+      <p class="helper" id="auth-hint"></p>
+    </section>
+    <section id="app-view" class="card app-card hidden" aria-labelledby="app-title">
+      <div class="topline"><p class="eyebrow">YOUR WINE COLLECTION</p><button class="link" id="signout" type="button">Sign out</button></div>
+      <h1 id="app-title">Welcome to my little Cellar.</h1>
+      <p id="user-label" class="muted"></p>
+      <div id="cellar-list" class="cellar-list"></div>
+      <section id="setup-view" class="setup hidden" aria-labelledby="setup-title">
+        <h2 id="setup-title">Let's create your first cellar</h2>
+        <p class="muted">You can personalize your storage areas, sections, and wines in the next phase.</p>
+        <form id="setup-form">
+          <label for="cellar-name">Cellar name</label><input id="cellar-name" maxlength="120" required placeholder="e.g. The Guncles' Cellar">
+          <label for="currency">Currency</label>
+          <select id="currency"><option value="CAD">CAD — Canadian dollar</option><option value="USD">USD — US dollar</option><option value="EUR">EUR — Euro</option><option value="GBP">GBP — Pound sterling</option></select>
+          <button type="submit" id="create-cellar" class="primary">Create my cellar</button>
+        </form>
+      </section>
+      <div id="cellar-dashboard" class="hidden">
+        <p class="muted">Your cellar is connected securely to Supabase. Inventory and storage-area management are coming in the next step.</p>
       </div>
-      <div>
-        <h1 class="text-xl font-bold tracking-tight text-slate-900 dark:text-white">Wine Cellars Hub</h1>
-        <p class="text-xs text-slate-500 dark:text-slate-400">Select a cellar to view inventory</p>
-      </div>
-    </div>
-  </header>
-
-  <main class="max-w-4xl w-full mx-auto px-4 py-8 space-y-8 my-auto">
-
-    <!-- Cellars -->
-    <div class="space-y-3">
-      <h3 class="text-[11px] uppercase font-mono font-bold tracking-wider text-slate-400 dark:text-slate-500 px-1">Cellars</h3>
-
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-
-        <a href="./M&S/" class="glass-card rounded-2xl p-6 flex flex-col justify-between group cursor-pointer shadow-xl">
-          <div class="space-y-3">
-            <div class="flex items-center justify-between">
-              <span class="px-2.5 py-1 text-[10px] uppercase font-mono font-bold tracking-wider bg-rose-100 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-300 dark:border-rose-500/20 rounded-lg">
-                Main Cellar
-              </span>
-              <i data-lucide="chevron-right" class="w-5 h-5 text-slate-400 dark:text-slate-500 group-hover:text-rose-500 dark:group-hover:text-rose-400 group-hover:translate-x-1 transition"></i>
-            </div>
-            <div>
-              <h2 class="text-lg font-bold text-slate-900 dark:text-white group-hover:text-rose-600 dark:group-hover:text-rose-400 transition">Wine Cellar M&S</h2>
-              <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Primary collection management with Google Sheets database and Gemini AI scanner.</p>
-            </div>
-          </div>
-
-          <div class="pt-6 mt-4 border-t border-slate-200 dark:border-slate-800/60 flex items-center justify-between text-xs text-slate-500">
-            <span class="flex items-center gap-1.5"><i data-lucide="database" class="w-3.5 h-3.5"></i> Google Sheets</span>
-            <span class="text-rose-600 dark:text-rose-400 font-medium group-hover:underline">Open App &rarr;</span>
-          </div>
-        </a>
-
-        <div class="glass-card rounded-2xl p-6 flex flex-col justify-between opacity-60 border-dashed">
-          <div class="space-y-3">
-            <div class="flex items-center justify-between">
-              <span class="px-2.5 py-1 text-[10px] uppercase font-mono font-bold tracking-wider bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-300 dark:border-slate-700 rounded-lg">
-                Secondary / Future
-              </span>
-              <i data-lucide="lock" class="w-4 h-4 text-slate-400 dark:text-slate-500"></i>
-            </div>
-            <div>
-              <h2 class="text-lg font-bold text-slate-600 dark:text-slate-300">Alexandre Bougie</h2>
-              <p class="text-xs text-slate-400 dark:text-slate-500 mt-1">Slot reserved for Alexandre's collection or separate rack tracking.</p>
-            </div>
-          </div>
-
-          <div class="pt-6 mt-4 border-t border-slate-200 dark:border-slate-800/60 text-xs text-slate-400 dark:text-slate-600 italic">
-            Ready for future expansion
-          </div>
-        </div>
-
-        <div class="glass-card rounded-2xl p-6 flex flex-col justify-between opacity-60 border-dashed">
-          <div class="space-y-3">
-            <div class="flex items-center justify-between">
-              <span class="px-2.5 py-1 text-[10px] uppercase font-mono font-bold tracking-wider bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-300 dark:border-slate-700 rounded-lg">
-                Secondary / Future
-              </span>
-              <i data-lucide="lock" class="w-4 h-4 text-slate-400 dark:text-slate-500"></i>
-            </div>
-            <div>
-              <h2 class="text-lg font-bold text-slate-600 dark:text-slate-300">Jean-Philippe Brisson</h2>
-              <p class="text-xs text-slate-400 dark:text-slate-500 mt-1">Slot reserved for Jean-Philippe's collection or separate rack tracking.</p>
-            </div>
-          </div>
-
-          <div class="pt-6 mt-4 border-t border-slate-200 dark:border-slate-800/60 text-xs text-slate-400 dark:text-slate-600 italic">
-            Ready for future expansion
-          </div>
-        </div>
-
-      </div>
-    </div>
-
-    <!-- Other tools -->
-    <div class="space-y-3">
-      <h3 class="text-[11px] uppercase font-mono font-bold tracking-wider text-slate-400 dark:text-slate-500 px-1">Other tools</h3>
-
-      <a href="https://mom3ntum-mtl.github.io/WineCellar/littleSommelier/" class="glass-card rounded-2xl p-5 flex items-center justify-between group cursor-pointer shadow-xl">
-        <div class="flex items-center gap-4">
-          <div class="p-2.5 bg-indigo-100 dark:bg-indigo-950/80 border border-indigo-300 dark:border-indigo-500/30 rounded-2xl text-indigo-600 dark:text-indigo-400 shrink-0">
-            <i data-lucide="sparkles" class="w-5 h-5"></i>
-          </div>
-          <div>
-            <h2 class="text-base font-bold text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition">my little Sommelier app</h2>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Scan a label for an instant tasting profile, powered by Gemini.</p>
-          </div>
-        </div>
-        <i data-lucide="chevron-right" class="w-5 h-5 text-slate-400 dark:text-slate-500 group-hover:text-indigo-500 dark:group-hover:text-indigo-400 group-hover:translate-x-1 transition shrink-0"></i>
-      </a>
-    </div>
-
+    </section>
+    <section id="recovery-view" class="card auth-card hidden" aria-labelledby="recovery-title">
+      <p class="eyebrow">ACCOUNT SECURITY</p><h1 id="recovery-title">Choose a new password</h1>
+      <form id="recovery-form"><label for="new-password">New password</label><input type="password" id="new-password" minlength="8" autocomplete="new-password" required><button class="primary" type="submit">Update password</button></form>
+    </section>
+    <p id="status" role="status" aria-live="polite" class="status"></p>
+    <footer>Made for the wines worth remembering.</footer>
   </main>
-
-  <footer class="border-t border-slate-200 dark:border-slate-800/80 py-4 text-center text-xs text-slate-500">
-    <p>Cellar Management System • Powered by Google Apps Script</p>
-  </footer>
-
-  <script>
-    document.addEventListener("DOMContentLoaded", () => {
-      lucide.createIcons();
-    });
-  </script>
+  <script type="module" src="./js/app.js"></script>
 </body>
 </html>
