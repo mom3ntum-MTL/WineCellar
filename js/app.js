@@ -5,7 +5,7 @@ const supabase=createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY,{auth:{persist
 const $=id=>document.getElementById(id);
 const show=(id,on=true)=>$(id).classList.toggle("hidden",!on);
 const status=(message,type="")=>{const el=$("status");el.textContent=message;el.className="status "+type};
-let authMode="signin", currentUser=null, recovery=false, selectedCellar=null;
+let authMode="signin", currentUser=null, recovery=false, selectedCellar=null, selectedAreaLots=[];
 function setMode(mode){
   authMode=mode;status("");
   $("auth-title").textContent=({signin:"welcome to your Cellar!",signup:"Create your account.",reset:"Reset your password."})[mode];
@@ -52,33 +52,89 @@ $("setup-form").addEventListener("submit",async(e)=>{
   }catch(error){status(error.message||"Unable to create cellar.","error")}finally{button.disabled=false}
 });
 async function loadCellars(preferredId=null){
-  const {data:members,error}=await supabase.from("cellar_members").select("cellar_id,role,cellars(id,name,currency_code)").order("joined_at",{ascending:true});
-  if(error){status("Could not load cellar memberships: "+error.message,"error");return}
+  const {data:members,error}=await supabase.from("cellar_members")
+    .select("cellar_id,role,cellars(id,name,currency_code)").order("joined_at",{ascending:true});
+  if(error){status("Could not load Cellar memberships: "+error.message,"error");return}
   selectedCellar=null;
-  show("owner-tools",false);
-  const list=$("cellar-list");list.replaceChildren();
+  show("owner-tools",false);show("role-badge",false);show("collection-button",false);
   show("setup-view",!members?.length);show("cellar-dashboard",!!members?.length);
-  for(const m of members||[]){
-    if(!m.cellars)continue;
-    const item=document.createElement("button");item.type="button";item.className="cellar-item";item.style.textAlign="left";
-    const title=document.createElement("span");const strong=document.createElement("strong");strong.textContent=m.cellars.name;
-    const detail=document.createElement("small");detail.textContent=m.cellars.currency_code+" · Select cellar";
-    title.append(strong,detail);
-    const role=document.createElement("span");role.className="pill";role.textContent=m.role;
-    item.append(title,role);
-    item.addEventListener("click",()=>selectCellar(m.cellars,m.role,item));
-    list.append(item);
-    if((preferredId&&m.cellar_id===preferredId)||(!preferredId&&list.children.length===1))selectCellar(m.cellars,m.role,item);
-  }
+  show("multi-cellar-notice",(members?.length||0)>1);
+  if(!members?.length){$("app-title").textContent="my little Cellar";return}
+  const m=members.find(x=>x.cellar_id===preferredId)||members[0];
+  if(!m.cellars){status("The linked Cellar could not be loaded.","error");return}
+  await selectCellar(m.cellars,m.role);
 }
-function selectCellar(cellar,role,element){
-  for(const item of $("cellar-list").children)item.classList.remove("selected");
-  element.classList.add("selected");
+async function selectCellar(cellar,role){
   selectedCellar={id:cellar.id,role};
   show("owner-tools",role==="owner");
+  $("role-badge").textContent="Connected as "+role.toUpperCase();
+  show("role-badge");show("collection-button");
   $("app-title").textContent=cellar.name;
-  $("cellar-dashboard").querySelector("p").textContent="Connected as "+role+". Your cellar is ready for the next phase: inventory and storage-area management.";
+  show("storage-overview");show("collection-overview",false);
+  await loadStorageAreas(cellar.id);
 }
+async function loadStorageAreas(cellarId){
+  const [areasResult,lotsResult]=await Promise.all([
+    supabase.from("storage_locations").select("id,parent_id,kind,name,display_order,visual_settings").eq("cellar_id",cellarId).order("display_order",{ascending:true}),
+    supabase.from("inventory_lots").select("id,location_id,quantity").eq("cellar_id",cellarId)
+  ]);
+  if(areasResult.error||lotsResult.error){
+    status("Unable to load Storage Areas: "+(areasResult.error?.message||lotsResult.error?.message),"error");return;
+  }
+  const locations=areasResult.data||[],lots=lotsResult.data||[];
+  selectedAreaLots=lots;
+  const byId=new Map(locations.map(location=>[location.id,location]));
+  const counts=new Map();
+  let unassigned=0;
+  for(const lot of lots){
+    const quantity=Number(lot.quantity)||0;
+    if(!lot.location_id){unassigned+=quantity;continue}
+    let location=byId.get(lot.location_id),depth=0,visited=new Set();
+    if(!location){unassigned+=quantity;continue}
+    while(location&&depth<4&&!visited.has(location.id)){
+      visited.add(location.id);
+      if(location.kind==="area"){counts.set(location.id,(counts.get(location.id)||0)+quantity);break}
+      location=byId.get(location.parent_id);
+      depth++;
+    }
+    if(!location||location.kind!=="area")unassigned+=quantity;
+  }
+  const areas=locations.filter(x=>x.kind==="area");
+  const list=$("storage-area-list");list.replaceChildren();
+  $("area-total").textContent=areas.length+" "+(areas.length===1?"area":"areas");
+  if(!areas.length){
+    const empty=document.createElement("div");empty.className="empty-state";
+    const h=document.createElement("h3");h.textContent="No Storage Areas yet";
+    const p=document.createElement("p");p.textContent="Your Cellar is ready. Next, we'll add the tools to create a basement Cellar, refrigerator, wine cabinet, and their sections.";
+    empty.append(h,p);list.append(empty);
+  }
+  for(const area of areas){
+    const panel=document.createElement("article");panel.className="storage-card";
+    const type=area.visual_settings?.storage_type||"Storage type not set";
+    const place=area.visual_settings?.place_label||"Location not set";
+    const heading=document.createElement("h3");heading.textContent=area.name;
+    const detail=document.createElement("p");detail.className="muted";detail.textContent=place+" · "+type;
+    const qty=document.createElement("p");qty.className="storage-quantity";
+    const n=counts.get(area.id)||0;qty.textContent=n+" "+(n===1?"bottle":"bottles");
+    const sections=document.createElement("small");sections.textContent=locations.filter(x=>x.parent_id===area.id&&x.kind==="section").length+" sections";
+    panel.append(heading,detail,qty,sections);list.append(panel);
+  }
+  if(unassigned){
+    const panel=document.createElement("article");panel.className="storage-card unassigned";
+    const heading=document.createElement("h3");heading.textContent="Unassigned bottles";
+    const detail=document.createElement("p");detail.className="muted";detail.textContent="Not yet assigned to a Storage Area";
+    const qty=document.createElement("p");qty.className="storage-quantity";qty.textContent=unassigned+" bottles";
+    panel.append(heading,detail,qty);list.append(panel);
+  }
+  $("collection-count").textContent=lots.reduce((sum,l)=>sum+(Number(l.quantity)||0),0)+" bottles currently in your Collection.";
+}
+$("collection-button").addEventListener("click",()=>{
+  if(!selectedCellar)return;
+  show("storage-overview",false);show("collection-overview");show("collection-button",false);
+});
+$("back-to-areas").addEventListener("click",()=>{
+  show("collection-overview",false);show("storage-overview");show("collection-button");
+});
 $("add-owner-form").addEventListener("submit",async (e)=>{
   e.preventDefault();
   if(!selectedCellar||selectedCellar.role!=="owner"){status("Only a cellar owner can grant access.","error");return}
@@ -96,7 +152,7 @@ async function refresh(){
   const {data:{user},error}=await supabase.auth.getUser();
   if(error||!user){currentUser=null;show("auth-view");show("app-view",false);show("recovery-view",false);return}
   currentUser=user;show("auth-view",false);show("recovery-view",false);show("app-view");
-  $("user-label").textContent="Signed in as "+user.email;
+  $("user-email").textContent=user.email||"";
   await loadCellars();
 }
 supabase.auth.onAuthStateChange((event)=>{
