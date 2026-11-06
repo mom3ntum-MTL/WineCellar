@@ -5,10 +5,10 @@ const supabase=createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY,{auth:{persist
 const $=id=>document.getElementById(id);
 const show=(id,on=true)=>$(id).classList.toggle("hidden",!on);
 const status=(message,type="")=>{const el=$("status");el.textContent=message;el.className="status "+type};
-let authMode="signin", currentUser=null, recovery=false;
+let authMode="signin", currentUser=null, recovery=false, selectedCellar=null;
 function setMode(mode){
   authMode=mode;status("");
-  $("auth-title").textContent=({signin:"Welcome to your cellar.",signup:"Create your account.",reset:"Reset your password."})[mode];
+  $("auth-title").textContent=({signin:"welcome to your Cellar!",signup:"Create your account.",reset:"Reset your password."})[mode];
   $("auth-submit").textContent=({signin:"Sign in",signup:"Create account",reset:"Send recovery link"})[mode];
   show("password-label",mode!=="reset");show("password",mode!=="reset");
   $("password").required=mode!=="reset";
@@ -45,7 +45,7 @@ $("recovery-form").addEventListener("submit",async(e)=>{
 $("setup-form").addEventListener("submit",async(e)=>{
   e.preventDefault();const button=$("create-cellar");button.disabled=true;status("Creating your cellar...");
   try{
-    const {data,error}=await supabase.rpc("create_my_cellar",{cellar_name:$("cellar-name").value.trim(),cellar_currency:$("currency").value});
+    const {data,error}=await supabase.rpc("create_my_cellar",{cellar_name:$("cellar-name").value.trim(),cellar_currency:"CAD"});
     if(error)throw error;
     status("Your cellar is ready.","success");
     await loadCellars(data);
@@ -54,6 +54,8 @@ $("setup-form").addEventListener("submit",async(e)=>{
 async function loadCellars(preferredId=null){
   const {data:members,error}=await supabase.from("cellar_members").select("cellar_id,role,cellars(id,name,currency_code)").order("joined_at",{ascending:true});
   if(error){status("Could not load cellar memberships: "+error.message,"error");return}
+  selectedCellar=null;
+  show("owner-tools",false);
   const list=$("cellar-list");list.replaceChildren();
   show("setup-view",!members?.length);show("cellar-dashboard",!!members?.length);
   for(const m of members||[]){
@@ -72,9 +74,23 @@ async function loadCellars(preferredId=null){
 function selectCellar(cellar,role,element){
   for(const item of $("cellar-list").children)item.classList.remove("selected");
   element.classList.add("selected");
+  selectedCellar={id:cellar.id,role};
+  show("owner-tools",role==="owner");
   $("app-title").textContent=cellar.name;
   $("cellar-dashboard").querySelector("p").textContent="Connected as "+role+". Your cellar is ready for the next phase: inventory and storage-area management.";
 }
+$("add-owner-form").addEventListener("submit",async (e)=>{
+  e.preventDefault();
+  if(!selectedCellar||selectedCellar.role!=="owner"){status("Only a cellar owner can grant access.","error");return}
+  const button=$("add-owner");button.disabled=true;status("Adding owner...");
+  try{
+    const {error}=await supabase.rpc("add_cellar_owner",{target_cellar:selectedCellar.id,member_email:$("owner-email").value.trim()});
+    if(error)throw error;
+    $("owner-email").value="";
+    status("Owner access granted. They can sign in to view this cellar.","success");
+  }catch(error){status(error.message||"Unable to add owner.","error")}
+  finally{button.disabled=false}
+});
 async function refresh(){
   if(recovery){show("recovery-view");show("auth-view",false);show("app-view",false);return}
   const {data:{user},error}=await supabase.auth.getUser();
