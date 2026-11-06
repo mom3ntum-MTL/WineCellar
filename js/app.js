@@ -5,7 +5,7 @@ const supabase=createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY,{auth:{persist
 const $=id=>document.getElementById(id);
 const show=(id,on=true)=>$(id).classList.toggle("hidden",!on);
 const status=(message,type="")=>{const el=$("status");el.textContent=message;el.className="status "+type};
-let authMode="signin", currentUser=null, recovery=false, selectedCellar=null, selectedAreaLots=[];
+let authMode="signin", currentUser=null, recovery=false, selectedCellar=null, selectedAreaLots=[], currentLocations=[], storageEditing=null;
 function setMode(mode){
   authMode=mode;status("");
   $("auth-title").textContent=({signin:"welcome to your Cellar!",signup:"Create your account.",reset:"Reset your password."})[mode];
@@ -67,6 +67,7 @@ async function loadCellars(preferredId=null){
 async function selectCellar(cellar,role){
   selectedCellar={id:cellar.id,role};
   show("owner-tools",role==="owner");
+  show("add-storage-area",role==="owner");
   show("manage-users-panel",false);
   $("manage-users-toggle").setAttribute("aria-expanded","false");
   $("role-badge").textContent="Connected as "+role.toUpperCase();
@@ -75,62 +76,156 @@ async function selectCellar(cellar,role){
   show("storage-overview");show("collection-overview",false);
   await loadStorageAreas(cellar.id);
 }
+const makeElement=(tag,className,text)=>{const el=document.createElement(tag);if(className)el.className=className;if(text!==undefined)el.textContent=String(text);return el};
+function childLocationCount(id){return currentLocations.filter(l=>l.parent_id===id).length}
+function descendantsOf(id){
+  const ids=new Set([id]);
+  let changed=true;
+  while(changed){changed=false;for(const l of currentLocations)if(l.parent_id&&ids.has(l.parent_id)&&!ids.has(l.id)){ids.add(l.id);changed=true}}
+  return ids;
+}
+function locationBottleCount(id){
+  const ids=descendantsOf(id);
+  return selectedAreaLots.reduce((sum,l)=>sum+(l.location_id&&ids.has(l.location_id)?Number(l.quantity)||0:0),0);
+}
+function actionButton(text,handler,style=""){
+  const button=makeElement("button","small-action "+style,text);
+  button.type="button";button.addEventListener("click",handler);
+  return button;
+}
+function storageActions(location){
+  const actions=makeElement("div","storage-actions");
+  if(selectedCellar?.role!=="owner")return actions;
+  actions.append(actionButton("Edit",()=>openStorageForm("edit",location)));
+  if(location.kind!=="subsection")
+    actions.append(actionButton(location.kind==="area"?"+ Section":"+ Subsection",()=>openStorageForm("create",null,location)));
+  actions.append(actionButton("Delete",()=>deleteStorageLocation(location),"danger-action"));
+  return actions;
+}
+function renderStorageNode(location){
+  const line=makeElement("div",location.kind==="section"?"storage-node section-node":"storage-node subsection-node");
+  const content=makeElement("div","storage-node-copy");
+  content.append(makeElement("strong","",location.name));
+  const qty=locationBottleCount(location.id);
+  const info=makeElement("small","",qty+" "+(qty===1?"bottle":"bottles")+(location.max_bottles!==null?" / max "+location.max_bottles:""));
+  content.append(info);line.append(content,storageActions(location));
+  const block=makeElement("div","storage-node-group");block.append(line);
+  for(const child of currentLocations.filter(x=>x.parent_id===location.id))
+    block.append(renderStorageNode(child));
+  return block;
+}
 async function loadStorageAreas(cellarId){
   const [areasResult,lotsResult]=await Promise.all([
     supabase.from("storage_locations").select("id,parent_id,kind,name,display_order,physical_location,storage_type,max_bottles").eq("cellar_id",cellarId).order("display_order",{ascending:true}),
     supabase.from("inventory_lots").select("id,location_id,quantity").eq("cellar_id",cellarId)
   ]);
+  if(selectedCellar?.id!==cellarId)return;
   if(areasResult.error||lotsResult.error){
     status("Unable to load Storage Areas: "+(areasResult.error?.message||lotsResult.error?.message),"error");return;
   }
-  const locations=areasResult.data||[],lots=lotsResult.data||[];
-  selectedAreaLots=lots;
-  const byId=new Map(locations.map(location=>[location.id,location]));
-  const counts=new Map();
-  let unassigned=0;
-  for(const lot of lots){
-    const quantity=Number(lot.quantity)||0;
-    if(!lot.location_id){unassigned+=quantity;continue}
-    let location=byId.get(lot.location_id),depth=0,visited=new Set();
-    if(!location){unassigned+=quantity;continue}
-    while(location&&depth<4&&!visited.has(location.id)){
-      visited.add(location.id);
-      if(location.kind==="area"){counts.set(location.id,(counts.get(location.id)||0)+quantity);break}
-      location=byId.get(location.parent_id);
-      depth++;
-    }
-    if(!location||location.kind!=="area")unassigned+=quantity;
-  }
-  const areas=locations.filter(x=>x.kind==="area");
+  currentLocations=areasResult.data||[];
+  selectedAreaLots=lotsResult.data||[];
+  const areas=currentLocations.filter(x=>x.kind==="area");
   const list=$("storage-area-list");list.replaceChildren();
   $("area-total").textContent=areas.length+" "+(areas.length===1?"area":"areas");
   if(!areas.length){
-    const empty=document.createElement("div");empty.className="empty-state";
-    const h=document.createElement("h3");h.textContent="No Storage Areas yet";
-    const p=document.createElement("p");p.textContent="Your Cellar is ready. Next, we'll add the tools to create a basement Cellar, refrigerator, wine cabinet, and their sections.";
-    empty.append(h,p);list.append(empty);
+    const empty=makeElement("div","empty-state");
+    empty.append(makeElement("h3","","No Storage Areas yet"),
+      makeElement("p","","Create a Storage Area such as a Basement Cellar or a Kitchen Refrigerator. Then add optional Sections and Subsections."));
+    list.append(empty);
   }
   for(const area of areas){
-    const panel=document.createElement("article");panel.className="storage-card";
-    const type=area.storage_type||"Storage type not set";
-    const place=area.physical_location||"Location not set";
-    const heading=document.createElement("h3");heading.textContent=area.name;
-    const detail=document.createElement("p");detail.className="muted";detail.textContent=place+" · "+type;
-    const qty=document.createElement("p");qty.className="storage-quantity";
-    const n=counts.get(area.id)||0;qty.textContent=n+" "+(n===1?"bottle":"bottles");
-    const sections=document.createElement("small");sections.textContent=locations.filter(x=>x.parent_id===area.id&&x.kind==="section").length+" sections";
-    if(area.max_bottles!==null){const cap=document.createElement("small");cap.textContent="Capacity: "+area.max_bottles+" bottles";panel.append(heading,detail,qty,sections,cap)}
-    else panel.append(heading,detail,qty,sections);
+    const panel=makeElement("article","storage-card");
+    panel.append(makeElement("h3","",area.name),
+      makeElement("p","muted",(area.physical_location||"Physical location not set")+" · "+(area.storage_type||"Storage type not set")));
+    const qty=locationBottleCount(area.id);
+    panel.append(makeElement("p","storage-quantity",qty+" "+(qty===1?"bottle":"bottles")+
+      (area.max_bottles!==null?" / "+area.max_bottles:"")));
+    panel.append(makeElement("small","",childLocationCount(area.id)+" Sections"));
+    panel.append(storageActions(area));
+    const children=currentLocations.filter(x=>x.parent_id===area.id);
+    if(children.length){const nested=makeElement("div","location-children");for(const child of children)nested.append(renderStorageNode(child));panel.append(nested)}
     list.append(panel);
   }
+  const known=new Set(currentLocations.map(x=>x.id));
+  const unassigned=selectedAreaLots.reduce((sum,l)=>sum+((!l.location_id||!known.has(l.location_id))?Number(l.quantity)||0:0),0);
   if(unassigned){
-    const panel=document.createElement("article");panel.className="storage-card unassigned";
-    const heading=document.createElement("h3");heading.textContent="Unassigned bottles";
-    const detail=document.createElement("p");detail.className="muted";detail.textContent="Not yet assigned to a Storage Area";
-    const qty=document.createElement("p");qty.className="storage-quantity";qty.textContent=unassigned+" bottles";
-    panel.append(heading,detail,qty);list.append(panel);
+    const panel=makeElement("article","storage-card");
+    panel.append(makeElement("h3","","Unassigned bottles"),makeElement("p","storage-quantity",unassigned+" bottles"));
+    list.append(panel);
   }
-  $("collection-count").textContent=lots.reduce((sum,l)=>sum+(Number(l.quantity)||0),0)+" bottles currently in your Collection.";
+  $("collection-count").textContent=selectedAreaLots.reduce((sum,l)=>sum+(Number(l.quantity)||0),0)+" bottles currently in your Collection.";
+}
+function closeStorageForm(){$("storage-dialog").close();storageEditing=null}
+function openStorageForm(mode,location=null,parent=null){
+  if(selectedCellar?.role!=="owner")return;
+  storageEditing={mode,id:location?.id||null,kind:location?.kind||(!parent?"area":parent.kind==="area"?"section":"subsection"),parent_id:location?.parent_id||parent?.id||null,cellar_id:selectedCellar.id};
+  const editing=mode==="edit";
+  $("storage-form").reset();
+  $("storage-dialog-title").textContent=(editing?"Edit ":"Add ")+({area:"Storage Area",section:"Section",subsection:"Subsection"})[storageEditing.kind];
+  const parentName=currentLocations.find(x=>x.id===storageEditing.parent_id)?.name;
+  $("storage-parent-summary").textContent=parentName?"Inside: "+parentName:"An Area can contain Sections and Subsections.";
+  show("area-only-fields",storageEditing.kind==="area");
+  $("storage-name").value=location?.name||"";
+  $("storage-physical-location").value=location?.physical_location||"";
+  const type=location?.storage_type||"";
+  const predefined=Array.from($("storage-type").options).some(o=>o.value===type);
+  $("storage-type").value=predefined?type:"Other";
+  $("storage-type-custom").value=predefined?"":type;
+  toggleStorageCustomType();
+  $("storage-capacity").value=location?.max_bottles??"";
+  $("storage-dialog").showModal();
+  $("storage-name").focus();
+}
+function toggleStorageCustomType(){
+  const custom=$("storage-type").value==="Other";
+  show("storage-type-custom-label",custom);show("storage-type-custom",custom);
+}
+$("storage-type").addEventListener("change",toggleStorageCustomType);
+$("add-storage-area").addEventListener("click",()=>openStorageForm("create"));
+$("cancel-storage").addEventListener("click",closeStorageForm);
+$("cancel-storage-bottom").addEventListener("click",closeStorageForm);
+$("storage-dialog").addEventListener("close",()=>{storageEditing=null});
+$("storage-form").addEventListener("submit",async(e)=>{
+  e.preventDefault();
+  const editing=storageEditing;if(!editing||selectedCellar?.role!=="owner"||editing.cellar_id!==selectedCellar.id)return;
+  const name=$("storage-name").value.trim(),capacityText=$("storage-capacity").value.trim();
+  const capacity=capacityText===""?null:Number(capacityText);
+  if(!name||name.length>120){status("Enter a Storage Area, Section, or Subsection name.","error");return}
+  if(capacity!==null&&(!Number.isInteger(capacity)||capacity<=0)){status("Maximum bottles must be a positive whole number.","error");return}
+  const values={name,max_bottles:capacity};
+  if(editing.kind==="area"){
+    values.physical_location=$("storage-physical-location").value.trim()||null;
+    values.storage_type=($("storage-type").value==="Other"?$("storage-type-custom").value.trim():$("storage-type").value)||null;
+  }
+  if(editing.mode==="create"){
+    Object.assign(values,{cellar_id:editing.cellar_id,kind:editing.kind,parent_id:editing.parent_id});
+  }
+  const button=$("save-storage");button.disabled=true;
+  try{
+    const query=supabase.from("storage_locations");
+    const {error}=editing.mode==="edit"
+      ?await query.update(values).eq("id",editing.id).eq("cellar_id",editing.cellar_id)
+      :await query.insert(values);
+    if(error)throw error;
+    closeStorageForm();
+    await loadStorageAreas(editing.cellar_id);
+    status((editing.mode==="edit"?"Updated ":"Created ")+editing.kind+".","success");
+  }catch(error){status(error.message||"Could not save this location.","error")}
+  finally{button.disabled=false}
+});
+async function deleteStorageLocation(location){
+  if(selectedCellar?.role!=="owner")return;
+  const children=childLocationCount(location.id);
+  const lots=selectedAreaLots.filter(l=>l.location_id===location.id);
+  if(children){status("Remove this location's Sections/Subsections before deleting it.","error");return}
+  if(lots.length){status("Move or remove bottles assigned to this location before deleting it.","error");return}
+  if(!window.confirm("Delete "+location.kind+" “"+location.name+"”? This cannot be undone."))return;
+  const cellarId=selectedCellar.id;
+  const {data,error}=await supabase.from("storage_locations").delete().eq("id",location.id).eq("cellar_id",cellarId).select("id");
+  if(error){status("Unable to delete: "+error.message,"error");return}
+  if(!data?.length){status("Location was not deleted. Check your permissions.","error");return}
+  await loadStorageAreas(cellarId);status("Location deleted.","success");
 }
 $("collection-button").addEventListener("click",()=>{
   if(!selectedCellar)return;

@@ -41,7 +41,7 @@
       </section>
       <div id="cellar-dashboard" class="hidden">
         <section id="storage-overview" aria-labelledby="storage-title">
-          <div class="section-title"><h2 id="storage-title">Storage Areas</h2><span id="area-total" class="muted"></span></div>
+          <div class="section-title"><h2 id="storage-title">Storage Areas</h2><div class="storage-heading-actions"><span id="area-total" class="muted"></span><button id="add-storage-area" class="small-action hidden" type="button">+ Add Storage Area</button></div></div>
           <p class="muted">Your Collection, organized by where the wines live.</p>
           <div id="storage-area-list" class="storage-grid"></div>
         </section>
@@ -74,6 +74,25 @@
         </section>
       </div>
     </section>
+    <dialog id="storage-dialog" class="storage-dialog" aria-labelledby="storage-dialog-title">
+      <form id="storage-form">
+        <div class="dialog-head"><h2 id="storage-dialog-title">Storage Area</h2><button class="link" id="cancel-storage" type="button" aria-label="Close">✕</button></div>
+        <p id="storage-parent-summary" class="muted"></p>
+        <label for="storage-name">Name *</label><input id="storage-name" maxlength="120" required placeholder="e.g. Basement Cellar">
+        <div id="area-only-fields">
+          <label for="storage-physical-location">Physical location</label><input id="storage-physical-location" maxlength="120" placeholder="e.g. Basement, Kitchen">
+          <label for="storage-type">Storage type</label><select id="storage-type">
+            <option value="">Select a type (optional)</option>
+            <option>Walk-in Cellar</option><option>Refrigerator</option><option>Wine Cabinet</option>
+            <option>Rack</option><option>Closet</option><option>Other</option>
+          </select>
+          <label id="storage-type-custom-label" for="storage-type-custom" class="hidden">Other storage type</label><input id="storage-type-custom" class="hidden" maxlength="120" placeholder="Describe storage type">
+        </div>
+        <label for="storage-capacity">Maximum bottles (optional)</label><input id="storage-capacity" type="number" min="1" max="10000000" step="1" placeholder="No limit specified">
+        <p class="helper">Capacity is informational; the app does not track physical bottle slots.</p>
+        <div class="dialog-actions"><button class="link" type="button" id="cancel-storage-bottom">Cancel</button><button class="primary" id="save-storage" type="submit">Save</button></div>
+      </form>
+    </dialog>
     <section id="recovery-view" class="card auth-card hidden" aria-labelledby="recovery-title">
       <p class="eyebrow">ACCOUNT SECURITY</p><h1 id="recovery-title">Choose a new password</h1>
       <form id="recovery-form"><label for="new-password">New password</label><input type="password" id="new-password" minlength="8" autocomplete="new-password" required><button class="primary" type="submit">Update password</button></form>
