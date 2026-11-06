@@ -51,7 +51,27 @@
           <p class="muted">This will become your searchable wine inventory with filters, sorting, and statistics, based on the original WineCellar.</p>
           <p id="collection-count" class="collection-count"></p>
         </section>
-        <section id="owner-tools" class="owner-tools hidden" aria-labelledby="owner-title"><h2 id="owner-title">Cellar owners</h2><p class="muted">Add another owner with full rights to this cellar. They must already have created and confirmed a WineCellar account.</p><form id="add-owner-form"><label for="owner-email">New owner’s email address</label><input type="email" id="owner-email" placeholder="person@example.com" required><button class="primary" id="add-owner" type="submit">Grant Owner access</button></form><p class="helper">Only an existing owner can grant this permission. The new owner will see the shared cellar when they sign in.</p></section>
+        <section id="owner-tools" class="owner-tools hidden" aria-labelledby="owner-title">
+          <button id="manage-users-toggle" class="manage-users-toggle" type="button" aria-expanded="false" aria-controls="manage-users-panel"><span>Manage Cellar's USERS</span><span aria-hidden="true">▾</span></button>
+          <div id="manage-users-panel" class="manage-users-panel hidden">
+            <h2 id="owner-title">Manage Cellar's USERS</h2>
+            <p class="muted">Invite a person by email and assign their Cellar access.</p>
+            <form id="invite-user-form">
+              <label for="invite-email">Email address</label>
+              <input id="invite-email" type="email" placeholder="person@example.com" required>
+              <label for="invite-role">Access level</label>
+              <select id="invite-role">
+                <option value="owner">OWNER — full Cellar management</option>
+                <option value="member" selected>MEMBER — manage bottles, not Cellar structure</option>
+                <option value="viewer">VIEWER — read-only access</option>
+              </select>
+              <button class="primary" id="invite-user" type="submit">Add or invite user</button>
+            </form>
+            <p class="helper">If the email already belongs to a confirmed account, access is granted immediately. Otherwise, a pending invitation is saved; ask the person to create and confirm an account using that email. An automatic invitation email is not sent yet.</p>
+            <h3>Users and pending invitations</h3>
+            <div id="managed-user-list" class="managed-user-list"></div>
+          </div>
+        </section>
       </div>
     </section>
     <section id="recovery-view" class="card auth-card hidden" aria-labelledby="recovery-title">

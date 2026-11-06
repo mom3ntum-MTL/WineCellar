@@ -2,3 +2,17 @@
 .brand-wine{width:27px;height:27px}.currency-display{margin:20px 0 0;padding:12px 14px;border:1px solid #514551;border-radius:10px;background:#2b252f;color:#cbbfc8;font-size:14px}.currency-display strong{color:#f1d4dc}.owner-tools{margin-top:28px;padding-top:16px;border-top:1px solid #494550}.owner-tools .primary{margin-top:18px}.muted strong{color:#f0dce3}
 
 .dashboard-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;margin-top:6px}.dashboard-heading h1{margin-bottom:12px}.collection-button{align-self:center;border:1px solid #b96a82;background:#663449;color:#ffe2eb;font-weight:750;border-radius:11px;padding:12px 15px;text-align:center;font-size:13px}.collection-button:hover{background:#814056}.account-line{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:0 0 22px}.account-line .muted{margin:0;overflow-wrap:anywhere}.account-line strong{color:#f7e2e9}.account-line .pill{white-space:nowrap}#cellar-dashboard{margin-top:16px}.section-title{display:flex;align-items:center;justify-content:space-between;gap:10px}.section-title h2{margin-bottom:7px}.section-title .muted{margin:0}.storage-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(225px,1fr));gap:14px}.storage-card{border:1px solid #52424c;background:#1a1d23;border-radius:15px;padding:20px;min-height:166px}.storage-card h3{margin:0 0 9px;font-size:18px;letter-spacing:-.02em}.storage-card .muted{margin:0 0 18px}.storage-quantity{font-weight:800;font-size:24px;margin:0 0 9px;color:#f2cad6}.storage-card small{color:#b7acb5}.empty-state{grid-column:1/-1;border:1px dashed #71606a;border-radius:14px;padding:24px;color:#c1b7bf}.empty-state h3{margin:0 0 10px;color:#f3d6df}.empty-state p{margin:0;line-height:1.5}.collection-count{color:#f1c0d1;font-size:18px;font-weight:700}@media(max-width:600px){.dashboard-heading{display:block}.collection-button{margin:0 0 16px}.dashboard-heading h1{margin-bottom:12px}}
+
+.collection-button{font-size:17px;padding:15px 22px;min-height:54px}
+.account-line{display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-start;gap:6px}
+.account-line .pill{font-size:9px;letter-spacing:.04em;padding:4px 8px}
+.owner-tools{margin-top:32px}
+.manage-users-toggle{display:flex;align-items:center;justify-content:space-between;width:100%;gap:15px;padding:16px 18px;border:1px solid #755063;background:#31232e;color:#f1d9e2;border-radius:12px;font-weight:750;text-align:left}
+.manage-users-toggle:hover{background:#443040}
+.manage-users-panel{padding:12px 3px 0}
+.manage-users-panel h3{font-size:16px;margin-top:28px}
+.managed-user-list{display:grid;gap:8px;margin-top:12px}
+.managed-user{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:12px;border:1px solid #49424c;border-radius:10px;background:#1a1b22;font-size:13px}
+.managed-user strong{overflow-wrap:anywhere}
+.managed-user span{color:#d6b1c3}
+.storage-card small{display:block;margin-top:6px}

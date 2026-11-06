@@ -67,6 +67,8 @@ async function loadCellars(preferredId=null){
 async function selectCellar(cellar,role){
   selectedCellar={id:cellar.id,role};
   show("owner-tools",role==="owner");
+  show("manage-users-panel",false);
+  $("manage-users-toggle").setAttribute("aria-expanded","false");
   $("role-badge").textContent="Connected as "+role.toUpperCase();
   show("role-badge");show("collection-button");
   $("app-title").textContent=cellar.name;
@@ -75,7 +77,7 @@ async function selectCellar(cellar,role){
 }
 async function loadStorageAreas(cellarId){
   const [areasResult,lotsResult]=await Promise.all([
-    supabase.from("storage_locations").select("id,parent_id,kind,name,display_order,visual_settings").eq("cellar_id",cellarId).order("display_order",{ascending:true}),
+    supabase.from("storage_locations").select("id,parent_id,kind,name,display_order,physical_location,storage_type,max_bottles").eq("cellar_id",cellarId).order("display_order",{ascending:true}),
     supabase.from("inventory_lots").select("id,location_id,quantity").eq("cellar_id",cellarId)
   ]);
   if(areasResult.error||lotsResult.error){
@@ -110,14 +112,16 @@ async function loadStorageAreas(cellarId){
   }
   for(const area of areas){
     const panel=document.createElement("article");panel.className="storage-card";
-    const type=area.visual_settings?.storage_type||"Storage type not set";
-    const place=area.visual_settings?.place_label||"Location not set";
+    const type=area.storage_type||"Storage type not set";
+    const place=area.physical_location||"Location not set";
     const heading=document.createElement("h3");heading.textContent=area.name;
     const detail=document.createElement("p");detail.className="muted";detail.textContent=place+" · "+type;
     const qty=document.createElement("p");qty.className="storage-quantity";
     const n=counts.get(area.id)||0;qty.textContent=n+" "+(n===1?"bottle":"bottles");
     const sections=document.createElement("small");sections.textContent=locations.filter(x=>x.parent_id===area.id&&x.kind==="section").length+" sections";
-    panel.append(heading,detail,qty,sections);list.append(panel);
+    if(area.max_bottles!==null){const cap=document.createElement("small");cap.textContent="Capacity: "+area.max_bottles+" bottles";panel.append(heading,detail,qty,sections,cap)}
+    else panel.append(heading,detail,qty,sections);
+    list.append(panel);
   }
   if(unassigned){
     const panel=document.createElement("article");panel.className="storage-card unassigned";
@@ -135,16 +139,45 @@ $("collection-button").addEventListener("click",()=>{
 $("back-to-areas").addEventListener("click",()=>{
   show("collection-overview",false);show("storage-overview");show("collection-button");
 });
-$("add-owner-form").addEventListener("submit",async (e)=>{
+$("manage-users-toggle").addEventListener("click",async()=>{
+  if(!selectedCellar||selectedCellar.role!=="owner")return;
+  const panel=$("manage-users-panel"),opening=panel.classList.contains("hidden");
+  show("manage-users-panel",opening);
+  $("manage-users-toggle").setAttribute("aria-expanded",String(opening));
+  if(opening)await loadManagedUsers();
+});
+async function loadManagedUsers(){
+  if(!selectedCellar||selectedCellar.role!=="owner")return;
+  const {data,error}=await supabase.rpc("list_cellar_users",{target_cellar:selectedCellar.id});
+  const list=$("managed-user-list");list.replaceChildren();
+  if(error){
+    const message=document.createElement("p");message.className="helper";
+    message.textContent="User list unavailable. Please run the Supabase users migration (004).";
+    list.append(message);return;
+  }
+  if(!data?.length){list.textContent="No users found.";return}
+  for(const u of data){
+    const line=document.createElement("div");line.className="managed-user";
+    const email=document.createElement("strong");email.textContent=u.email;
+    const info=document.createElement("span");info.textContent=u.role.toUpperCase()+" · "+u.status;
+    line.append(email,info);list.append(line);
+  }
+}
+$("invite-user-form").addEventListener("submit",async(e)=>{
   e.preventDefault();
-  if(!selectedCellar||selectedCellar.role!=="owner"){status("Only a cellar owner can grant access.","error");return}
-  const button=$("add-owner");button.disabled=true;status("Adding owner...");
+  if(!selectedCellar||selectedCellar.role!=="owner"){status("Only an Owner can manage Cellar users.","error");return}
+  const button=$("invite-user");button.disabled=true;status("Saving invitation...");
   try{
-    const {error}=await supabase.rpc("add_cellar_owner",{target_cellar:selectedCellar.id,member_email:$("owner-email").value.trim()});
+    const {data,error}=await supabase.rpc("invite_cellar_user",{
+      target_cellar:selectedCellar.id,
+      invite_email:$("invite-email").value.trim(),
+      invite_role:$("invite-role").value
+    });
     if(error)throw error;
-    $("owner-email").value="";
-    status("Owner access granted. They can sign in to view this cellar.","success");
-  }catch(error){status(error.message||"Unable to add owner.","error")}
+    status(data==="added"?"Access granted to an existing user.":"Invitation saved. Share the WineCellar website link with this person.","success");
+    $("invite-email").value="";
+    await loadManagedUsers();
+  }catch(error){status(error.message||"Could not invite the user.","error")}
   finally{button.disabled=false}
 });
 async function refresh(){
